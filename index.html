@@ -589,7 +589,7 @@ async function init(){
     const pj=await dcmp(PB64);
     document.getElementById('lsub').textContent='ประมวลผลข้อมูล...';
     const numD=[10,11,12,13,14,15];
-    DR=JSON.parse(dj).map(r=>r.map((v,i)=>numD.includes(i)?+v||0:(v===null||v===undefined?'':String(v))));
+    DR=JSON.parse(dj).map(r=>r.map((v,i)=>numD.includes(i)?+v||0:([6,7].includes(i)?((!v||String(v).trim()==='')?'ไม่มีสถานะ':String(v).trim()):(v===null||v===undefined?'':String(v)))));
     PR=JSON.parse(pj).map(r=>r.map((v,i)=>[7,8,9,13].includes(i)?+v||0:(v===null||v===undefined?'':String(v))));
     DF=[...DR];PF=[...PR];
     initDF();initPF();
