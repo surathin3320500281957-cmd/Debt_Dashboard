@@ -101,10 +101,10 @@ td.kps{color:var(--am);font-weight:600}
 </div>
 <div class="hdr">
   <div><h1><span class="hico">&#128200;</span>บริหารหนี้ฝ่าย ชบ.</h1><div class="hsub">ระบบติดตามและบริหารหนี้ค้างชำระ · กอง มบ. ตบ.1 ตบ.2</div></div>
-  <div class="hbgs"><span class="hbg">18,599 รายการ</span><span class="hbg">พ.ค. 2569</span></div>
+  <div class="hbgs"><span class="hbg">18,567 รายการ</span><span class="hbg">พ.ค. 2569</span></div>
 </div>
 <nav class="nav">
-  <button class="ntab active" onclick="showMain('debt')" id="nt-debt">&#128220; บริหารหนี้ตามสัญญา <span class="nc" id="nc-debt">18,599</span></button>
+  <button class="ntab active" onclick="showMain('debt')" id="nt-debt">&#128220; บริหารหนี้ตามสัญญา <span class="nc" id="nc-debt">18,567</span></button>
   <button class="ntab" onclick="showMain('dpd')" id="nt-dpd">&#9888; DPD ธอส. <span class="nc red" id="nc-dpd">1,568</span></button>
 </nav>
 
@@ -583,7 +583,7 @@ function printSum(tableId, title) {
 
 async function init(){
   try{
-    document.getElementById('lsub').textContent='กำลัง decompress ข้อมูลหนี้ (18,599 ราย จาก Excel)...';
+    document.getElementById('lsub').textContent='กำลัง decompress ข้อมูล...';
     const dj=await dcmp(DB64);
     document.getElementById('lsub').textContent='กำลัง decompress DPD (1,568 ราย)...';
     const pj=await dcmp(PB64);
@@ -592,6 +592,13 @@ async function init(){
     DR=JSON.parse(dj).map(r=>r.map((v,i)=>numD.includes(i)?+v||0:([6,7].includes(i)?((!v||String(v).trim()==='')?'ไม่มีสถานะ':String(v).trim()):(v===null||v===undefined?'':String(v)))));
     PR=JSON.parse(pj).map(r=>r.map((v,i)=>[7,8,9,13].includes(i)?+v||0:(v===null||v===undefined?'':String(v))));
     DF=[...DR];PF=[...PR];
+    // อัปเดตตัวเลขจากข้อมูลจริง
+    const elBadge=document.querySelector('.hbgs .hbg');
+    if(elBadge)elBadge.textContent=DR.length.toLocaleString('th-TH')+' รายการ';
+    const elNcDebt=document.getElementById('nc-debt');
+    if(elNcDebt)elNcDebt.textContent=DR.length.toLocaleString('th-TH');
+    const elNcDpd=document.getElementById('nc-dpd');
+    if(elNcDpd)elNcDpd.textContent=PR.length.toLocaleString('th-TH');
     initDF();initPF();
     renderDebt();
     document.getElementById('lov').classList.add('hidden');
