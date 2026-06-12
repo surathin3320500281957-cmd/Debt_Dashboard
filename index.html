@@ -132,6 +132,8 @@ td.kps{color:var(--am);font-weight:600}
     <select id="f-tr" onchange="applyF()"><option value="">ทั้งหมด</option></select>
     <label>ช่วงงวดค้าง:</label>
     <select id="f-rng" onchange="applyF()"><option value="">ทั้งหมด</option><option>ไม่ค้าง</option><option>ค้าง 1-2 งวด</option><option>ค้าง 3 งวด</option><option>เกิน 3 งวด</option></select>
+    <label id="lbl-trend" style="display:none">แนวโน้มหนี้:</label>
+    <select id="f-trend" onchange="applyF()" style="display:none"><option value="">ทั้งหมด</option><option value="up">เพิ่มขึ้น</option><option value="down">ลดลง</option><option value="same">เท่าเดิม</option></select>
     <label>ตัวชี้วัด:</label>
     <select id="f-kpi" onchange="applyF()"><option value="">ทั้งหมด</option><option value="1">มีหนี้ตัวชี้วัด</option><option value="0">ไม่มี</option></select>
     <button class="btn" onclick="resetF()">&#10006; ล้าง</button>
@@ -261,11 +263,15 @@ function initDF(){
 }
 function setView(v){
   DV=v;['curr','prev','cmp'].forEach(n=>{const el=document.getElementById('tv-'+n);if(el)el.className='tb'+(n===v?' active':'');});
+  const isCmp=v==='cmp';
+  const lt=document.getElementById('lbl-trend'),ft=document.getElementById('f-trend');
+  if(lt)lt.style.display=isCmp?'':'none';
+  if(ft){ft.style.display=isCmp?'':'none';if(!isCmp)ft.value='';}
   applyF();
 }
 function applyF(){
   const g=id=>{const el=document.getElementById(id);return el?el.value:'';};
-  const tp=g('f-type'),dv=g('f-div'),br=g('f-br'),pj=g('f-pj'),st=g('f-st'),tr=g('f-tr'),rng=g('f-rng'),kp=g('f-kpi');
+  const tp=g('f-type'),dv=g('f-div'),br=g('f-br'),pj=g('f-pj'),st=g('f-st'),tr=g('f-tr'),rng=g('f-rng'),kp=g('f-kpi'),trend=g('f-trend');
   const vST=r=>DV==='prev'?r[D.sp]:r[D.sc];
   const vRNG=r=>DV==='prev'?r[D.rp]:r[D.rc];
   // update branch when div changes
@@ -295,12 +301,13 @@ function applyF(){
     if(rng&&vRNG(r)!==rng)return false;
     if(kp==='1'&&!(r[D.kc]>0))return false;
     if(kp==='0'&&r[D.kc]>0)return false;
+    if(trend){const diff=r[D.pc]-r[D.pp];if(trend==='up'&&diff<=0)return false;if(trend==='down'&&diff>=0)return false;if(trend==='same'&&diff!==0)return false;}
     return true;
   });
   renderDebt();
 }
 function resetF(){
-  ['f-type','f-div','f-br','f-pj','f-st','f-tr','f-rng','f-kpi'].forEach(id=>{
+  ['f-type','f-div','f-br','f-pj','f-st','f-tr','f-rng','f-kpi','f-trend'].forEach(id=>{
     const el=document.getElementById(id);
     if(el){
       if(id==='f-br'){while(el.options.length>1)el.remove(1);[...new Set(DR.map(r=>r[D.br]).filter(v=>v&&v!==''))].sort().forEach(v=>el.add(new Option(v,v)));}
