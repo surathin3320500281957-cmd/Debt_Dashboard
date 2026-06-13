@@ -385,7 +385,9 @@ function renderDebt(){
 
   // DELTA KPI chart (เฉพาะ mode เปรียบเทียบ)
   const dkWrap=document.getElementById('delta-kpi-wrap');
-  if(ic&&dkWrap){
+  const kpiEl=document.getElementById('f-kpi');
+  const kpiVal=kpiEl?kpiEl.value:'';
+  if(ic&&dkWrap&&kpiVal!=='0'){
     dkWrap.style.display='';
     const dkLabs=bK.map(sbr);
     const dkVals=bK.map(b=>bm[b].kc-bm[b].kp);
