@@ -153,17 +153,13 @@ td.kps{color:var(--am);font-weight:600}
     <div class="cc"><div class="ct">Ranking หนี้ตัวชี้วัด รายเลขผัง Top15 (บาท)</div><div style="position:relative;height:310px"><canvas id="ch-rkp"></canvas></div></div>
   </div>
   <div class="tc" id="delta-charts-row" style="display:none;gap:10px;flex-wrap:wrap;margin-bottom:10px">
-    <div style="flex:1 1 260px;min-width:220px">
-      <div class="tb2"><h3 style="font-size:12px">Δ ตัวชี้วัด <span style="color:var(--g400);font-weight:400">(ทั้งหมด)</span></h3></div>
-      <div style="position:relative;height:180px"><canvas id="ch-dk-all"></canvas></div>
+    <div style="flex:1 1 280px;min-width:240px">
+      <div class="tb2"><h3 style="font-size:12px">Δ หนี้ค้างรวม รายสาขา <span style="color:var(--g400);font-weight:400">(นี้ − ก่อน)</span></h3></div>
+      <div style="position:relative;height:180px"><canvas id="ch-dk-pc"></canvas></div>
     </div>
-    <div style="flex:1 1 260px;min-width:220px">
-      <div class="tb2"><h3 style="font-size:12px">Δ ตัวชี้วัด <span style="color:var(--g400);font-weight:400">(มีตัวชี้วัด)</span></h3></div>
-      <div style="position:relative;height:180px"><canvas id="ch-dk-has"></canvas></div>
-    </div>
-    <div style="flex:1 1 260px;min-width:220px">
-      <div class="tb2"><h3 style="font-size:12px">Δ ตัวชี้วัด <span style="color:var(--g400);font-weight:400">(ไม่มีตัวชี้วัด)</span></h3></div>
-      <div style="position:relative;height:180px"><canvas id="ch-dk-none"></canvas></div>
+    <div style="flex:1 1 280px;min-width:240px">
+      <div class="tb2"><h3 style="font-size:12px">Δ หนี้ตัวชี้วัด รายสาขา <span style="color:var(--g400);font-weight:400">(นี้ − ก่อน)</span></h3></div>
+      <div style="position:relative;height:180px"><canvas id="ch-dk-kc"></canvas></div>
     </div>
   </div>
   <div class="tc">
@@ -391,29 +387,23 @@ function renderDebt(){
   document.getElementById('b2s').textContent=(ic?'ก่อน vs นี้':ip?'เดือนก่อน':'เดือนนี้')+' (บาท)';
   mkC('ch-b2','bar',{labels:bK.map(sbr),datasets:ic?[{label:'ก่อน',data:kVp,backgroundColor:C.am+'66',borderWidth:0},{label:'นี้',data:kV,backgroundColor:C.am,borderWidth:0}]:[{data:kV,backgroundColor:C.am,borderWidth:0}]},{scales:{x:xa,y:ya}});
 
-  // DELTA KPI charts (3 charts: ทั้งหมด / มีตัวชี้วัด / ไม่มีตัวชี้วัด) — เฉพาะ mode เปรียบเทียบ
+  // DELTA charts (2 charts: หนี้รวม + ตัวชี้วัด) — เฉพาะ mode เปรียบเทียบ
   const dkRow=document.getElementById('delta-charts-row');
   if(ic&&dkRow){
     dkRow.style.display='flex';
     const dkLabs=bK.map(sbr);
-    // ทั้งหมด: delta kc-kp ทุกราย (จาก bm ที่ build จาก d=DF)
-    const dkAll=bK.map(b=>bm[b].kc-bm[b].kp);
-    // มีตัวชี้วัด: เฉพาะรายที่ kc>0 หรือ kp>0
-    const bmHas={};d.filter(r=>r[D.kc]>0||r[D.kp]>0).forEach(r=>{const b=r[D.br]||'?';if(!bmHas[b])bmHas[b]={kc:0,kp:0};bmHas[b].kc+=r[D.kc];bmHas[b].kp+=r[D.kp];});
-    const dkHas=bK.map(b=>bmHas[b]?(bmHas[b].kc-bmHas[b].kp):0);
-    // ไม่มีตัวชี้วัด: เฉพาะรายที่ kc===0 และ kp===0
-    const bmNone={};d.filter(r=>r[D.kc]===0&&r[D.kp]===0).forEach(r=>{const b=r[D.br]||'?';if(!bmNone[b])bmNone[b]={kc:0,kp:0};bmNone[b].kc+=r[D.kc];bmNone[b].kp+=r[D.kp];});
-    const dkNone=bK.map(b=>bmNone[b]?(bmNone[b].kc-bmNone[b].kp):0);
+    const dkPc=bK.map(b=>bm[b].pc-bm[b].pp);
+    const dkKc=bK.map(b=>bm[b].kc-bm[b].kp);
     const mkDkLine=(cid,vals)=>{
-      const ptColors=vals.map(v=>v>0?'rgba(185,44,44,0.9)':v<0?'rgba(26,110,62,0.9)':'rgba(120,120,120,0.6)');
-      const ptBorder=vals.map(v=>v>0?'#b92c2c':v<0?'#1a6e3e':'#888');
+      const ptBg=vals.map(v=>v>0?'rgba(185,44,44,0.9)':v<0?'rgba(26,110,62,0.9)':'rgba(120,120,120,0.6)');
+      const ptBd=vals.map(v=>v>0?'#b92c2c':v<0?'#1a6e3e':'#888');
       const mx=Math.max(...vals.map(v=>Math.abs(v)),1);
       mkC(cid,'line',{
         labels:dkLabs,
         datasets:[{
-          label:'Δ ตัวชี้วัด',data:vals,
+          label:'Δ',data:vals,
           borderColor:'#1a5fa8',backgroundColor:'rgba(26,95,168,0.07)',
-          pointBackgroundColor:ptColors,pointBorderColor:ptBorder,
+          pointBackgroundColor:ptBg,pointBorderColor:ptBd,
           pointRadius:5,pointHoverRadius:7,borderWidth:2,fill:true,tension:0.3
         }]
       },{
@@ -425,9 +415,8 @@ function renderDebt(){
         }
       });
     };
-    mkDkLine('ch-dk-all',dkAll);
-    mkDkLine('ch-dk-has',dkHas);
-    mkDkLine('ch-dk-none',dkNone);
+    mkDkLine('ch-dk-pc',dkPc);
+    mkDkLine('ch-dk-kc',dkKc);
   } else if(dkRow){dkRow.style.display='none';}
 
     // RANKING project
