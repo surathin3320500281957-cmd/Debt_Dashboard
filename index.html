@@ -152,9 +152,15 @@ td.kps{color:var(--am);font-weight:600}
     <div class="cc"><div class="ct">Ranking หนี้ตัวชี้วัด รายโครงการ Top15 (บาท)</div><div style="position:relative;height:310px"><canvas id="ch-rk2"></canvas></div></div>
     <div class="cc"><div class="ct">Ranking หนี้ตัวชี้วัด รายเลขผัง Top15 (บาท)</div><div style="position:relative;height:310px"><canvas id="ch-rkp"></canvas></div></div>
   </div>
-  <div class="tc">
-    <div class="tb2"><h3>ตารางสรุป รายกอง / สาขา</h3><div class="ta"><button class="btn bxl" onclick="exportXL('sum')">&#11015; Excel</button><button class="btn bpdf" onclick="printSum('debt-sum-tbl','ตารางสรุปบริหารหนี้ รายกอง/สาขา')">&#11015; PDF</button></div></div>
-    <div class="tw" style="max-height:230px;overflow-y:auto"><table class="stbl" id="debt-sum-tbl"><thead><tr><th>กอง / สาขา</th><th class="r">รายการ</th><th class="r">หนี้ค้างรวม (บาท)</th><th class="r">หนี้ตัวชี้วัด (บาท)</th><th class="r">%KPI</th><th class="r">Δ หนี้รวม</th><th class="r">Δ ตัวชี้วัด</th></tr></thead><tbody id="sum-tbody"></tbody></table></div>
+  <div class="tc" style="display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap">
+    <div style="flex:1 1 320px;min-width:280px">
+      <div class="tb2"><h3>ตารางสรุป รายกอง / สาขา</h3><div class="ta"><button class="btn bxl" onclick="exportXL('sum')">&#11015; Excel</button><button class="btn bpdf" onclick="printSum('debt-sum-tbl','ตารางสรุปบริหารหนี้ รายกอง/สาขา')">&#11015; PDF</button></div></div>
+      <div class="tw" style="max-height:230px;overflow-y:auto"><table class="stbl" id="debt-sum-tbl"><thead><tr><th>กอง / สาขา</th><th class="r">รายการ</th><th class="r">หนี้ค้างรวม (บาท)</th><th class="r">หนี้ตัวชี้วัด (บาท)</th><th class="r">%KPI</th><th class="r">Δ หนี้รวม</th><th class="r">Δ ตัวชี้วัด</th></tr></thead><tbody id="sum-tbody"></tbody></table></div>
+    </div>
+    <div id="delta-kpi-wrap" style="flex:1 1 260px;min-width:240px;display:none">
+      <div class="tb2"><h3>Δ หนี้ตัวชี้วัด รายสาขา <span style="font-size:11px;color:var(--g400)">(นี้ − ก่อน)</span></h3></div>
+      <div style="position:relative;height:230px"><canvas id="ch-delta-kpi"></canvas></div>
+    </div>
   </div>
   <div class="tc">
     <div class="tb2">
@@ -385,15 +391,33 @@ function renderDebt(){
     const dkVals=bK.map(b=>bm[b].kc-bm[b].kp);
     const dkColors=dkVals.map(v=>v>0?'rgba(185,44,44,0.85)':v<0?'rgba(26,110,62,0.85)':'rgba(120,120,120,0.5)');
     const dkBorder=dkVals.map(v=>v>0?'#b92c2c':v<0?'#1a6e3e':'#888');
-    mkC('ch-delta-kpi','bar',{
+    mkC('ch-delta-kpi','line',{
       labels:dkLabs,
-      datasets:[{label:'Δ หนี้ตัวชี้วัด',data:dkVals,backgroundColor:dkColors,borderColor:dkBorder,borderWidth:1}]
+      datasets:[{
+        label:'Δ หนี้ตัวชี้วัด',
+        data:dkVals,
+        borderColor:'#1a5fa8',
+        backgroundColor:'rgba(26,95,168,0.08)',
+        pointBackgroundColor:dkColors,
+        pointBorderColor:dkBorder,
+        pointRadius:5,
+        pointHoverRadius:7,
+        borderWidth:2,
+        fill:true,
+        tension:0.3
+      }]
     },{
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{const v=ctx.raw;return(v>0?'+':'')+fmt(v)+' บาท';}}}},
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:ctx=>{const v=ctx.raw;return(v>0?'+':'')+fmt(v)+' บาท';}}}
+      },
       scales:{
-        x:{ticks:{font:{size:9},maxRotation:40},grid:{display:false}},
-        y:{ticks:{callback:v=>(v>=0?'+':'')+fmt(v)+'฿',font:{size:9}},grid:{color:'rgba(0,0,0,0.06)'},
-           afterDataLimits:axis=>{const mx=Math.max(...dkVals.map(v=>Math.abs(v)),1);axis.max=mx*1.2;axis.min=-mx*1.2;}}
+        x:{ticks:{font:{size:9},maxRotation:40},grid:{color:'rgba(0,0,0,0.03)'}},
+        y:{
+          ticks:{callback:v=>(v>=0?'+':'')+fmt(v)+'฿',font:{size:9}},
+          grid:{color:'rgba(0,0,0,0.06)'},
+          afterDataLimits:axis=>{const mx=Math.max(...dkVals.map(v=>Math.abs(v)),1);axis.max=mx*1.25;axis.min=-mx*1.25;}
+        }
       }
     });
   } else if(dkWrap){dkWrap.style.display='none';}
