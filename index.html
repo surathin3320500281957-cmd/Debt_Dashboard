@@ -377,6 +377,27 @@ function renderDebt(){
   document.getElementById('b2s').textContent=(ic?'ก่อน vs นี้':ip?'เดือนก่อน':'เดือนนี้')+' (บาท)';
   mkC('ch-b2','bar',{labels:bK.map(sbr),datasets:ic?[{label:'ก่อน',data:kVp,backgroundColor:C.am+'66',borderWidth:0},{label:'นี้',data:kV,backgroundColor:C.am,borderWidth:0}]:[{data:kV,backgroundColor:C.am,borderWidth:0}]},{scales:{x:xa,y:ya}});
 
+  // DELTA KPI chart (เฉพาะ mode เปรียบเทียบ)
+  const dkWrap=document.getElementById('delta-kpi-wrap');
+  if(ic&&dkWrap){
+    dkWrap.style.display='';
+    const dkLabs=bK.map(sbr);
+    const dkVals=bK.map(b=>bm[b].kc-bm[b].kp);
+    const dkColors=dkVals.map(v=>v>0?'rgba(185,44,44,0.85)':v<0?'rgba(26,110,62,0.85)':'rgba(120,120,120,0.5)');
+    const dkBorder=dkVals.map(v=>v>0?'#b92c2c':v<0?'#1a6e3e':'#888');
+    mkC('ch-delta-kpi','bar',{
+      labels:dkLabs,
+      datasets:[{label:'Δ หนี้ตัวชี้วัด',data:dkVals,backgroundColor:dkColors,borderColor:dkBorder,borderWidth:1}]
+    },{
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{const v=ctx.raw;return(v>0?'+':'')+fmt(v)+' บาท';}}}},
+      scales:{
+        x:{ticks:{font:{size:9},maxRotation:40},grid:{display:false}},
+        y:{ticks:{callback:v=>(v>=0?'+':'')+fmt(v)+'฿',font:{size:9}},grid:{color:'rgba(0,0,0,0.06)'},
+           afterDataLimits:axis=>{const mx=Math.max(...dkVals.map(v=>Math.abs(v)),1);axis.max=mx*1.2;axis.min=-mx*1.2;}}
+      }
+    });
+  } else if(dkWrap){dkWrap.style.display='none';}
+
   // RANKING project
   const pm={};d.forEach(r=>{const p=r[D.pj]||'?';if(!pm[p])pm[p]={pc:0,pp:0,kc:0,kp:0};pm[p].pc+=r[D.pc];pm[p].pp+=r[D.pp];pm[p].kc+=r[D.kc];pm[p].kp+=r[D.kp];});
   const t15p=Object.entries(pm).sort((a,b)=>(ip?b[1].pp:b[1].pc)-(ip?a[1].pp:a[1].pc)).slice(0,15);
