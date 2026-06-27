@@ -380,8 +380,8 @@ function renderDebt(){
   document.getElementById('nc-debt').textContent=d.length.toLocaleString();
   document.getElementById('d-kpi').innerHTML=
     `<div class="kc bl"><div class="kl">รายการทั้งหมด</div><div class="kv">${d.length.toLocaleString()}</div><div class="ks">รายการ</div></div>`+
-    `<div class="kc am"><div class="kl">หนี้ค้างรวม${ic?' (นี้)':ip?' (ก่อน)':''}</div><div class="kv amb">${fmt(pdS)} บาท</div>${ic?`<div class="kd ${dcs(dp)}">${dss(dp)} ${fmt(Math.abs(dp))} (${Math.abs(dpc).toFixed(1)}%)</div><div class="k2">ก่อน: ${fmt(spp)} บาท</div>`:''}</div>`+
-    `<div class="kc rd"><div class="kl">หนี้ตัวชี้วัด${ic?' (นี้)':ip?' (ก่อน)':''}</div><div class="kv red">${fmt(kpiS)} บาท</div>${ic?`<div class="kd ${dcs(dk)}">${dss(dk)} ${fmt(Math.abs(dk))} (${Math.abs(dkc).toFixed(1)}%)</div><div class="k2">ก่อน: ${fmt(skp)} บาท</div>`:''}</div>`+
+    `<div class="kc am"><div class="kl">หนี้ค้างรวม${ic?' (นี้)':ip?' (ก่อน)':''}</div><div class="kv amb">${fmt(pdS)}</div><div class="ks">บาท</div>${ic?`<div class="kd ${dcs(dp)}">${dss(dp)} ${fmt(Math.abs(dp))} (${Math.abs(dpc).toFixed(1)}%)</div><div class="k2">ก่อน: ${fmt(spp)} บาท</div>`:''}</div>`+
+    `<div class="kc rd"><div class="kl">หนี้ตัวชี้วัด${ic?' (นี้)':ip?' (ก่อน)':''}</div><div class="kv red">${fmt(kpiS)}</div><div class="ks">บาท</div>${ic?`<div class="kd ${dcs(dk)}">${dss(dk)} ${fmt(Math.abs(dk))} (${Math.abs(dkc).toFixed(1)}%)</div><div class="k2">ก่อน: ${fmt(skp)} บาท</div>`:''}</div>`+
     `<div class="kc tl"><div class="kl">รายที่มีหนี้ตัวชี้วัด</div><div class="kv">${d.filter(r=>r[D.kc]>0).length.toLocaleString()}</div><div class="ks">จาก ${d.length.toLocaleString()} ราย</div></div>`;
 
   // PIE status
