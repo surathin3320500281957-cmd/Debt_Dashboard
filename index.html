@@ -287,7 +287,7 @@ async function dcmp(b64){
 }
 function mkC(id,type,data,opts){
   Chart.defaults.font.family=getComputedStyle(document.body).getPropertyValue('--font')||'IBM Plex Sans Thai,sans-serif';
-  Chart.defaults.font.size=13;
+  Chart.defaults.font.size=10;
   if(CH[id]){try{CH[id].destroy();}catch(e){}delete CH[id];}
   const el=document.getElementById(id);if(!el)return null;
   try{return(CH[id]=new Chart(el,{type,data,options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},...opts}}));}
@@ -410,8 +410,8 @@ function renderDebt(){
   // BAR branch
   const bm={};d.forEach(r=>{const b=r[D.br]||'?';if(!bm[b])bm[b]={pc:0,pp:0,kc:0,kp:0};bm[b].pc+=r[D.pc];bm[b].pp+=r[D.pp];bm[b].kc+=r[D.kc];bm[b].kp+=r[D.kp];});
   const bK=Object.keys(bm).sort((a,b)=>(ip?bm[b].pp:bm[b].pc)-(ip?bm[a].pp:bm[a].pc));
-  const ya={ticks:{callback:v=>fmt(v)+'฿',font:{size:11}},grid:{color:'rgba(0,0,0,0.04)'}};
-  const xa={ticks:{font:{size:11},maxRotation:40},grid:{display:false}};
+  const ya={ticks:{callback:v=>fmt(v)+'฿',font:{size:10}},grid:{color:'rgba(0,0,0,0.04)'}};
+  const xa={ticks:{font:{size:10},maxRotation:45},grid:{display:false}};
   const pdV=bK.map(b=>ip?bm[b].pp:bm[b].pc),pdVp=bK.map(b=>bm[b].pp);
   const kV=bK.map(b=>ip?bm[b].kp:bm[b].kc),kVp=bK.map(b=>bm[b].kp);
   document.getElementById('b1s').textContent=(ic?'ก่อน vs นี้':ip?'เดือนก่อน':'เดือนนี้')+' (บาท)';
@@ -441,8 +441,8 @@ function renderDebt(){
       },{
         plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{const v=ctx.raw;return(v>0?'+':'')+fmt(v)+' บาท';}}}},
         scales:{
-          x:{ticks:{font:{size:11},maxRotation:40},grid:{color:'rgba(0,0,0,0.03)'}},
-          y:{ticks:{callback:v=>(v>=0?'+':'')+fmt(v)+'฿',font:{size:11}},grid:{color:'rgba(0,0,0,0.05)'},
+          x:{ticks:{font:{size:10},maxRotation:45},grid:{color:'rgba(0,0,0,0.03)'}},
+          y:{ticks:{callback:v=>(v>=0?'+':'')+fmt(v)+'฿',font:{size:10}},grid:{color:'rgba(0,0,0,0.05)'},
              afterDataLimits:axis=>{axis.max=mx*1.25;axis.min=-mx*1.25;}}
         }
       });
@@ -455,7 +455,7 @@ function renderDebt(){
   const pm={};d.forEach(r=>{const p=r[D.pj]||'?';if(!pm[p])pm[p]={pc:0,pp:0,kc:0,kp:0};pm[p].pc+=r[D.pc];pm[p].pp+=r[D.pp];pm[p].kc+=r[D.kc];pm[p].kp+=r[D.kp];});
   const t15p=Object.entries(pm).sort((a,b)=>(ip?b[1].pp:b[1].pc)-(ip?a[1].pp:a[1].pc)).slice(0,15);
   const t15k=Object.entries(pm).filter(e=>(ip?e[1].kp:e[1].kc)>0).sort((a,b)=>(ip?b[1].kp:b[1].kc)-(ip?a[1].kp:a[1].kc)).slice(0,15);
-  const iya={indexAxis:'y',scales:{y:{ticks:{font:{size:11}},grid:{display:false}},x:{ticks:{callback:v=>fmt(v),font:{size:11}},grid:{color:'rgba(0,0,0,0.04)'}}}};
+  const iya={indexAxis:'y',scales:{y:{ticks:{font:{size:10}},grid:{display:false}},x:{ticks:{callback:v=>fmt(v),font:{size:10}},grid:{color:'rgba(0,0,0,0.04)'}}}};
   mkC('ch-rk1','bar',{labels:t15p.map(e=>cl(e[0],22)),datasets:[{data:t15p.map(e=>ip?e[1].pp:e[1].pc),backgroundColor:C.bl,borderWidth:0}]},iya);
   mkC('ch-rk2','bar',{labels:t15k.map(e=>cl(e[0],22)),datasets:[{data:t15k.map(e=>ip?e[1].kp:e[1].kc),backgroundColor:C.am,borderWidth:0}]},iya);
 
@@ -565,12 +565,12 @@ function renderDpd(){
   const bm={};
   d.forEach(r=>{const b=r[P.br]||'?';if(!bm[b])bm[b]={};RNGS.forEach(rng=>{if(!bm[b][rng])bm[b][rng]={c:0,p:0};});if(bm[b][r[P.rc]])bm[b][r[P.rc]].c++;if(bm[b][r[P.rp]])bm[b][r[P.rp]].p++;});
   const bK=Object.keys(bm).sort((a,b2)=>(bm[b2]['DPD เกิน 90 วัน']?.c||0)-(bm[a]['DPD เกิน 90 วัน']?.c||0));
-  mkC('ch-dpd-br','bar',{labels:bK.map(sbr),datasets:RNGS.map((rng,i)=>({label:rng.replace('DPD ',''),data:bK.map(b=>bm[b][rng]?.c||0),backgroundColor:RCI[i],borderWidth:0,stack:'s'}))},{plugins:{legend:{display:true,position:'top',labels:{font:{size:11},boxWidth:10,padding:5}}},scales:{x:{ticks:{font:{size:11},maxRotation:40},grid:{display:false}},y:{ticks:{font:{size:11}},grid:{color:'rgba(0,0,0,0.04)'},stacked:true}}});
+  mkC('ch-dpd-br','bar',{labels:bK.map(sbr),datasets:RNGS.map((rng,i)=>({label:rng.replace('DPD ',''),data:bK.map(b=>bm[b][rng]?.c||0),backgroundColor:RCI[i],borderWidth:0,stack:'s'}))},{plugins:{legend:{display:true,position:'top',labels:{font:{size:10},boxWidth:10,padding:5}}},scales:{x:{ticks:{font:{size:10},maxRotation:45},grid:{display:false}},y:{ticks:{font:{size:10}},grid:{color:'rgba(0,0,0,0.04)'},stacked:true}}});
   const curC=RNGS.map(rng=>d.filter(r=>r[P.rc]===rng).length);
   const prvC=RNGS.map(rng=>d.filter(r=>r[P.rp]===rng).length);
-  mkC('ch-dpd-rng','bar',{labels:RNGS.map(r=>r.replace('DPD ','')),datasets:[{label:'เดือนก่อน',data:prvC,backgroundColor:RCI.map(c=>c+'66'),borderWidth:0},{label:'เดือนนี้',data:curC,backgroundColor:RCI,borderWidth:0}]},{plugins:{legend:{display:true,position:'top',labels:{font:{size:11},boxWidth:10}}},scales:{x:{ticks:{font:{size:11}},grid:{display:false}},y:{ticks:{font:{size:11}},grid:{color:'rgba(0,0,0,0.04)'}}}});
+  mkC('ch-dpd-rng','bar',{labels:RNGS.map(r=>r.replace('DPD ','')),datasets:[{label:'เดือนก่อน',data:prvC,backgroundColor:RCI.map(c=>c+'66'),borderWidth:0},{label:'เดือนนี้',data:curC,backgroundColor:RCI,borderWidth:0}]},{plugins:{legend:{display:true,position:'top',labels:{font:{size:10},boxWidth:10}}},scales:{x:{ticks:{font:{size:10}},grid:{display:false}},y:{ticks:{font:{size:10}},grid:{color:'rgba(0,0,0,0.04)'}}}});
   const brRk=Object.keys(bm).map(b=>({b,hi:(bm[b]['DPD เกิน 90 วัน']?.c||0)+(bm[b]['DPD 61-90 วัน']?.c||0)})).sort((a,b)=>b.hi-a.hi).slice(0,10);
-  const iya={indexAxis:'y',scales:{y:{ticks:{font:{size:11}},grid:{display:false}},x:{ticks:{font:{size:11}},grid:{color:'rgba(0,0,0,0.04)'}}}};
+  const iya={indexAxis:'y',scales:{y:{ticks:{font:{size:10}},grid:{display:false}},x:{ticks:{font:{size:10}},grid:{color:'rgba(0,0,0,0.04)'}}}};
   mkC('ch-dpd-rk1','bar',{labels:brRk.map(e=>sbr(e.b)),datasets:[{data:brRk.map(e=>e.hi),backgroundColor:C.rd,borderWidth:0}]},iya);
   const pjm={};d.forEach(r=>{const p=r[P.pj]||'?';if(!pjm[p])pjm[p]=0;if(r[P.rc].includes('เกิน 90')||r[P.rc].includes('61-90'))pjm[p]++;});
   const pjRk=Object.entries(pjm).sort((a,b)=>b[1]-a[1]).slice(0,10);
