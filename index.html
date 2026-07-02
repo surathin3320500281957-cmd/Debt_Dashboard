@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Dashboard บริหารหนี้ ชบ. — โหลดจาก Excel</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap');
@@ -71,14 +70,6 @@ body{font-family:var(--font);font-size:15px;background:#eef2f7;color:var(--g800)
 .g4{display:grid;grid-template-columns:200px 1fr 1fr 200px;gap:12px;margin-bottom:12px}
 .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
-@media (max-width:900px){
-  .g4{grid-template-columns:1fr 1fr}
-  .g3{grid-template-columns:1fr}
-  .g2{grid-template-columns:1fr}
-}
-@media (max-width:520px){
-  .g4{grid-template-columns:1fr}
-}
 .cc{background:#fff;border:1px solid var(--g200);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow)}
 .ct{font-size:15px;font-weight:700;color:var(--g800);margin-bottom:2px}.cs{font-size:13px;color:var(--g400);margin-bottom:8px}
 .leg{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
@@ -297,7 +288,6 @@ async function dcmp(b64){
 function mkC(id,type,data,opts){
   Chart.defaults.font.family=getComputedStyle(document.body).getPropertyValue('--font')||'IBM Plex Sans Thai,sans-serif';
   Chart.defaults.font.size=10;
-  if(typeof ChartDataLabels!=='undefined'&&!Chart._dlReg){Chart.register(ChartDataLabels);Chart.defaults.set('plugins.datalabels',{display:false});Chart._dlReg=true;}
   if(CH[id]){try{CH[id].destroy();}catch(e){}delete CH[id];}
   const el=document.getElementById(id);if(!el)return null;
   try{return(CH[id]=new Chart(el,{type,data,options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},...opts}}));}
@@ -465,15 +455,14 @@ function renderDebt(){
   const pm={};d.forEach(r=>{const p=r[D.pj]||'?';if(!pm[p])pm[p]={pc:0,pp:0,kc:0,kp:0};pm[p].pc+=r[D.pc];pm[p].pp+=r[D.pp];pm[p].kc+=r[D.kc];pm[p].kp+=r[D.kp];});
   const t15p=Object.entries(pm).sort((a,b)=>(ip?b[1].pp:b[1].pc)-(ip?a[1].pp:a[1].pc)).slice(0,15);
   const t15k=Object.entries(pm).filter(e=>(ip?e[1].kp:e[1].kc)>0).sort((a,b)=>(ip?b[1].kp:b[1].kc)-(ip?a[1].kp:a[1].kc)).slice(0,15);
-  const rkPl={legend:{display:false},datalabels:{display:true,clip:false,clamp:true,color:'#1f2937',textStrokeColor:'#fff',textStrokeWidth:3,font:{size:8,weight:600},labels:{name:{anchor:'start',align:'end',offset:6,formatter:(v,ctx)=>ctx.chart.data.labels[ctx.dataIndex]},value:{anchor:'end',align:'end',offset:4,textStrokeWidth:0,color:'#fff',backgroundColor:'rgba(31,27,45,0.82)',borderRadius:5,padding:{top:3,bottom:3,left:6,right:6},font:{size:8,weight:700},formatter:v=>fmt(v)}}}};
-  const iya={indexAxis:'y',layout:{padding:{left:4,right:70}},scales:{y:{display:false},x:{display:false}},plugins:rkPl};
-  mkC('ch-rk1','bar',{labels:t15p.map(e=>cl(e[0],30)),datasets:[{data:t15p.map(e=>ip?e[1].pp:e[1].pc),backgroundColor:C.bl,borderWidth:0}]},iya);
-  mkC('ch-rk2','bar',{labels:t15k.map(e=>cl(e[0],30)),datasets:[{data:t15k.map(e=>ip?e[1].kp:e[1].kc),backgroundColor:C.am,borderWidth:0}]},iya);
+  const iya={indexAxis:'y',scales:{y:{ticks:{font:{size:10}},grid:{display:false}},x:{ticks:{callback:v=>fmt(v),font:{size:10}},grid:{color:'rgba(0,0,0,0.04)'}}}};
+  mkC('ch-rk1','bar',{labels:t15p.map(e=>cl(e[0],22)),datasets:[{data:t15p.map(e=>ip?e[1].pp:e[1].pc),backgroundColor:C.bl,borderWidth:0}]},iya);
+  mkC('ch-rk2','bar',{labels:t15k.map(e=>cl(e[0],22)),datasets:[{data:t15k.map(e=>ip?e[1].kp:e[1].kc),backgroundColor:C.am,borderWidth:0}]},iya);
 
   // RANKING plan
   const plm={};d.forEach(r=>{const pl=r[D.pl];if(!pl||pl==='')return;if(!plm[pl])plm[pl]={kc:0,kp:0,pj:r[D.pj]};plm[pl].kc+=r[D.kc];plm[pl].kp+=r[D.kp];});
   const t15pl=Object.entries(plm).filter(e=>(ip?e[1].kp:e[1].kc)>0).sort((a,b)=>(ip?b[1].kp:b[1].kc)-(ip?a[1].kp:a[1].kc)).slice(0,15);
-  mkC('ch-rkp','bar',{labels:t15pl.map(e=>e[0]+' ('+cl(e[1].pj,14)+')'),datasets:[{data:t15pl.map(e=>ip?e[1].kp:e[1].kc),backgroundColor:C.pu,borderWidth:0}]},iya);
+  mkC('ch-rkp','bar',{labels:t15pl.map(e=>e[0]+' ('+cl(e[1].pj,10)+')'),datasets:[{data:t15pl.map(e=>ip?e[1].kp:e[1].kc),backgroundColor:C.pu,borderWidth:0}]},iya);
 
   renderDSum(d,ip,ic);renderDDet(d,ip,ic);
 }
@@ -581,12 +570,11 @@ function renderDpd(){
   const prvC=RNGS.map(rng=>d.filter(r=>r[P.rp]===rng).length);
   mkC('ch-dpd-rng','bar',{labels:RNGS.map(r=>r.replace('DPD ','')),datasets:[{label:'เดือนก่อน',data:prvC,backgroundColor:RCI.map(c=>c+'66'),borderWidth:0},{label:'เดือนนี้',data:curC,backgroundColor:RCI,borderWidth:0}]},{plugins:{legend:{display:true,position:'top',labels:{font:{size:10},boxWidth:10}}},scales:{x:{ticks:{font:{size:10}},grid:{display:false}},y:{ticks:{font:{size:10}},grid:{color:'rgba(0,0,0,0.04)'}}}});
   const brRk=Object.keys(bm).map(b=>({b,hi:(bm[b]['DPD เกิน 90 วัน']?.c||0)+(bm[b]['DPD 61-90 วัน']?.c||0)})).sort((a,b)=>b.hi-a.hi).slice(0,10);
-  const rkPl2={legend:{display:false},datalabels:{display:true,clip:false,clamp:true,color:'#1f2937',textStrokeColor:'#fff',textStrokeWidth:3,font:{size:8,weight:600},labels:{name:{anchor:'start',align:'end',offset:6,formatter:(v,ctx)=>ctx.chart.data.labels[ctx.dataIndex]},value:{anchor:'end',align:'end',offset:4,textStrokeWidth:0,color:'#fff',backgroundColor:'rgba(31,27,45,0.82)',borderRadius:5,padding:{top:3,bottom:3,left:6,right:6},font:{size:8,weight:700},formatter:v=>fmt(v)}}}};
-  const iya={indexAxis:'y',layout:{padding:{left:4,right:70}},scales:{y:{display:false},x:{display:false}},plugins:rkPl2};
+  const iya={indexAxis:'y',scales:{y:{ticks:{font:{size:10}},grid:{display:false}},x:{ticks:{font:{size:10}},grid:{color:'rgba(0,0,0,0.04)'}}}};
   mkC('ch-dpd-rk1','bar',{labels:brRk.map(e=>sbr(e.b)),datasets:[{data:brRk.map(e=>e.hi),backgroundColor:C.rd,borderWidth:0}]},iya);
   const pjm={};d.forEach(r=>{const p=r[P.pj]||'?';if(!pjm[p])pjm[p]=0;if(r[P.rc].includes('เกิน 90')||r[P.rc].includes('61-90'))pjm[p]++;});
   const pjRk=Object.entries(pjm).sort((a,b)=>b[1]-a[1]).slice(0,10);
-  mkC('ch-dpd-rk2','bar',{labels:pjRk.map(e=>cl(e[0],26)),datasets:[{data:pjRk.map(e=>e[1]),backgroundColor:C.am,borderWidth:0}]},iya);
+  mkC('ch-dpd-rk2','bar',{labels:pjRk.map(e=>cl(e[0],18)),datasets:[{data:pjRk.map(e=>e[1]),backgroundColor:C.am,borderWidth:0}]},iya);
   // Summary
   const grp={};d.forEach(r=>{const dv=r[P.dv]||'?',br=r[P.br]||'?';if(!grp[dv])grp[dv]={};if(!grp[dv][br])grp[dv][br]={n:0};RNGS.forEach(rng=>{if(!grp[dv][br][rng+'c'])grp[dv][br][rng+'c']=0;if(!grp[dv][br][rng+'p'])grp[dv][br][rng+'p']=0;});if(grp[dv][br][r[P.rc]+'c']!==undefined)grp[dv][br][r[P.rc]+'c']++;if(grp[dv][br][r[P.rp]+'p']!==undefined)grp[dv][br][r[P.rp]+'p']++;grp[dv][br].n++;});
   let sr='';
