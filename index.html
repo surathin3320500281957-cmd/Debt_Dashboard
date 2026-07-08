@@ -187,9 +187,9 @@ td.kps{color:var(--am);font-weight:700}
     <div class="cc"><div class="ct">ช่วงงวดค้าง</div><div class="cs">สัดส่วนงวดค้าง</div><div class="leg" id="rng-leg"></div><div style="position:relative;height:145px"><canvas id="ch-rng"></canvas></div></div>
   </div>
   <div class="g3">
-    <div class="cc"><div class="ct">Ranking หนี้รวม รายโครงการ Top15 (บาท)</div><div style="position:relative;height:310px"><canvas id="ch-rk1"></canvas></div></div>
-    <div class="cc"><div class="ct">Ranking หนี้ตัวชี้วัด รายโครงการ Top15 (บาท)</div><div style="position:relative;height:310px"><canvas id="ch-rk2"></canvas></div></div>
-    <div class="cc"><div class="ct">Ranking หนี้ตัวชี้วัด รายเลขผัง Top15 (บาท)</div><div style="position:relative;height:310px"><canvas id="ch-rkp"></canvas></div></div>
+    <div class="cc"><div class="ct">Ranking หนี้รวม รายโครงการ Top15 (บาท)</div><div style="position:relative;height:460px"><canvas id="ch-rk1"></canvas></div></div>
+    <div class="cc"><div class="ct">Ranking หนี้ตัวชี้วัด รายโครงการ Top15 (บาท)</div><div style="position:relative;height:460px"><canvas id="ch-rk2"></canvas></div></div>
+    <div class="cc"><div class="ct">Ranking หนี้ตัวชี้วัด รายเลขผัง Top15 (บาท)</div><div style="position:relative;height:460px"><canvas id="ch-rkp"></canvas></div></div>
   </div>
   <div class="tc" id="delta-charts-row" style="display:none;gap:10px;flex-wrap:wrap;margin-bottom:10px">
     <div style="flex:1 1 280px;min-width:240px">
@@ -238,8 +238,8 @@ td.kps{color:var(--am);font-weight:700}
     <div class="cc"><div class="ct">เดือนก่อน vs เดือนนี้ แยกช่วง DPD</div><div style="position:relative;height:220px"><canvas id="ch-dpd-rng"></canvas></div></div>
   </div>
   <div class="g2">
-    <div class="cc"><div class="ct">Ranking สาขา — DPD สูง Top10</div><div class="cs">DPD เกิน 61 วัน</div><div style="position:relative;height:230px"><canvas id="ch-dpd-rk1"></canvas></div></div>
-    <div class="cc"><div class="ct">Ranking โครงการ — DPD สูง Top10</div><div class="cs">DPD เกิน 61 วัน</div><div style="position:relative;height:230px"><canvas id="ch-dpd-rk2"></canvas></div></div>
+    <div class="cc"><div class="ct">Ranking สาขา — DPD สูง Top10</div><div class="cs">DPD เกิน 61 วัน</div><div style="position:relative;height:360px"><canvas id="ch-dpd-rk1"></canvas></div></div>
+    <div class="cc"><div class="ct">Ranking โครงการ — DPD สูง Top10</div><div class="cs">DPD เกิน 61 วัน</div><div style="position:relative;height:360px"><canvas id="ch-dpd-rk2"></canvas></div></div>
   </div>
   <div class="tc">
     <div class="tb2"><h3>ตารางสรุป DPD รายกอง / สาขา</h3><div class="ta"><button class="btn bxl" onclick="exportXL('dpd-sum')">&#11015; Excel</button></div></div>
@@ -465,15 +465,15 @@ function renderDebt(){
   const pm={};d.forEach(r=>{const p=r[D.pj]||'?';if(!pm[p])pm[p]={pc:0,pp:0,kc:0,kp:0};pm[p].pc+=r[D.pc];pm[p].pp+=r[D.pp];pm[p].kc+=r[D.kc];pm[p].kp+=r[D.kp];});
   const t15p=Object.entries(pm).sort((a,b)=>(ip?b[1].pp:b[1].pc)-(ip?a[1].pp:a[1].pc)).slice(0,15);
   const t15k=Object.entries(pm).filter(e=>(ip?e[1].kp:e[1].kc)>0).sort((a,b)=>(ip?b[1].kp:b[1].kc)-(ip?a[1].kp:a[1].kc)).slice(0,15);
-  const rkPl={legend:{display:false},datalabels:{display:true,clip:false,clamp:true,color:'#1f2937',textStrokeColor:'#fff',textStrokeWidth:3,font:{size:8,weight:600},labels:{name:{anchor:'start',align:'end',offset:6,formatter:(v,ctx)=>ctx.chart.data.labels[ctx.dataIndex]},value:{anchor:'end',align:'end',offset:4,textStrokeWidth:0,color:'#fff',backgroundColor:'rgba(31,27,45,0.82)',borderRadius:5,padding:{top:3,bottom:3,left:6,right:6},font:{size:8,weight:700},formatter:v=>fmt(v)}}}};
-  const iya={indexAxis:'y',layout:{padding:{left:4,right:70}},scales:{y:{display:false},x:{display:false}},plugins:rkPl};
-  mkC('ch-rk1','bar',{labels:t15p.map(e=>cl(e[0],30)),datasets:[{data:t15p.map(e=>ip?e[1].pp:e[1].pc),backgroundColor:C.bl,borderWidth:0}]},iya);
-  mkC('ch-rk2','bar',{labels:t15k.map(e=>cl(e[0],30)),datasets:[{data:t15k.map(e=>ip?e[1].kp:e[1].kc),backgroundColor:C.am,borderWidth:0}]},iya);
+  const rkPl={legend:{display:false},datalabels:{display:true,clip:false,clamp:true,color:'#1f2937',textStrokeColor:'#fff',textStrokeWidth:4,font:{size:14,weight:600},labels:{name:{anchor:'start',align:'end',offset:8,formatter:(v,ctx)=>ctx.chart.data.labels[ctx.dataIndex]},value:{anchor:'end',align:'end',offset:6,textStrokeWidth:0,color:'#fff',backgroundColor:'rgba(31,27,45,0.9)',borderRadius:7,padding:{top:6,bottom:6,left:10,right:10},font:{size:14,weight:700},formatter:v=>fmt(v)}}}};
+  const iya={indexAxis:'y',layout:{padding:{left:4,right:110}},scales:{y:{display:false},x:{display:false}},plugins:rkPl};
+  mkC('ch-rk1','bar',{labels:t15p.map(e=>cl(e[0],20)),datasets:[{data:t15p.map(e=>ip?e[1].pp:e[1].pc),backgroundColor:C.bl,borderWidth:0}]},iya);
+  mkC('ch-rk2','bar',{labels:t15k.map(e=>cl(e[0],20)),datasets:[{data:t15k.map(e=>ip?e[1].kp:e[1].kc),backgroundColor:C.am,borderWidth:0}]},iya);
 
   // RANKING plan
   const plm={};d.forEach(r=>{const pl=r[D.pl];if(!pl||pl==='')return;if(!plm[pl])plm[pl]={kc:0,kp:0,pj:r[D.pj]};plm[pl].kc+=r[D.kc];plm[pl].kp+=r[D.kp];});
   const t15pl=Object.entries(plm).filter(e=>(ip?e[1].kp:e[1].kc)>0).sort((a,b)=>(ip?b[1].kp:b[1].kc)-(ip?a[1].kp:a[1].kc)).slice(0,15);
-  mkC('ch-rkp','bar',{labels:t15pl.map(e=>e[0]+' ('+cl(e[1].pj,14)+')'),datasets:[{data:t15pl.map(e=>ip?e[1].kp:e[1].kc),backgroundColor:C.pu,borderWidth:0}]},iya);
+  mkC('ch-rkp','bar',{labels:t15pl.map(e=>e[0]+' ('+cl(e[1].pj,10)+')'),datasets:[{data:t15pl.map(e=>ip?e[1].kp:e[1].kc),backgroundColor:C.pu,borderWidth:0}]},iya);
 
   renderDSum(d,ip,ic);renderDDet(d,ip,ic);
 }
@@ -581,12 +581,12 @@ function renderDpd(){
   const prvC=RNGS.map(rng=>d.filter(r=>r[P.rp]===rng).length);
   mkC('ch-dpd-rng','bar',{labels:RNGS.map(r=>r.replace('DPD ','')),datasets:[{label:'เดือนก่อน',data:prvC,backgroundColor:RCI.map(c=>c+'66'),borderWidth:0},{label:'เดือนนี้',data:curC,backgroundColor:RCI,borderWidth:0}]},{plugins:{legend:{display:true,position:'top',labels:{font:{size:10},boxWidth:10}}},scales:{x:{ticks:{font:{size:10}},grid:{display:false}},y:{ticks:{font:{size:10}},grid:{color:'rgba(0,0,0,0.04)'}}}});
   const brRk=Object.keys(bm).map(b=>({b,hi:(bm[b]['DPD เกิน 90 วัน']?.c||0)+(bm[b]['DPD 61-90 วัน']?.c||0)})).sort((a,b)=>b.hi-a.hi).slice(0,10);
-  const rkPl2={legend:{display:false},datalabels:{display:true,clip:false,clamp:true,color:'#1f2937',textStrokeColor:'#fff',textStrokeWidth:3,font:{size:8,weight:600},labels:{name:{anchor:'start',align:'end',offset:6,formatter:(v,ctx)=>ctx.chart.data.labels[ctx.dataIndex]},value:{anchor:'end',align:'end',offset:4,textStrokeWidth:0,color:'#fff',backgroundColor:'rgba(31,27,45,0.82)',borderRadius:5,padding:{top:3,bottom:3,left:6,right:6},font:{size:8,weight:700},formatter:v=>fmt(v)}}}};
-  const iya={indexAxis:'y',layout:{padding:{left:4,right:70}},scales:{y:{display:false},x:{display:false}},plugins:rkPl2};
+  const rkPl2={legend:{display:false},datalabels:{display:true,clip:false,clamp:true,color:'#1f2937',textStrokeColor:'#fff',textStrokeWidth:4,font:{size:14,weight:600},labels:{name:{anchor:'start',align:'end',offset:8,formatter:(v,ctx)=>ctx.chart.data.labels[ctx.dataIndex]},value:{anchor:'end',align:'end',offset:6,textStrokeWidth:0,color:'#fff',backgroundColor:'rgba(31,27,45,0.9)',borderRadius:7,padding:{top:6,bottom:6,left:10,right:10},font:{size:14,weight:700},formatter:v=>fmt(v)}}}};
+  const iya={indexAxis:'y',layout:{padding:{left:4,right:110}},scales:{y:{display:false},x:{display:false}},plugins:rkPl2};
   mkC('ch-dpd-rk1','bar',{labels:brRk.map(e=>sbr(e.b)),datasets:[{data:brRk.map(e=>e.hi),backgroundColor:C.rd,borderWidth:0}]},iya);
   const pjm={};d.forEach(r=>{const p=r[P.pj]||'?';if(!pjm[p])pjm[p]=0;if(r[P.rc].includes('เกิน 90')||r[P.rc].includes('61-90'))pjm[p]++;});
   const pjRk=Object.entries(pjm).sort((a,b)=>b[1]-a[1]).slice(0,10);
-  mkC('ch-dpd-rk2','bar',{labels:pjRk.map(e=>cl(e[0],26)),datasets:[{data:pjRk.map(e=>e[1]),backgroundColor:C.am,borderWidth:0}]},iya);
+  mkC('ch-dpd-rk2','bar',{labels:pjRk.map(e=>cl(e[0],18)),datasets:[{data:pjRk.map(e=>e[1]),backgroundColor:C.am,borderWidth:0}]},iya);
   // Summary
   const grp={};d.forEach(r=>{const dv=r[P.dv]||'?',br=r[P.br]||'?';if(!grp[dv])grp[dv]={};if(!grp[dv][br])grp[dv][br]={n:0};RNGS.forEach(rng=>{if(!grp[dv][br][rng+'c'])grp[dv][br][rng+'c']=0;if(!grp[dv][br][rng+'p'])grp[dv][br][rng+'p']=0;});if(grp[dv][br][r[P.rc]+'c']!==undefined)grp[dv][br][r[P.rc]+'c']++;if(grp[dv][br][r[P.rp]+'p']!==undefined)grp[dv][br][r[P.rp]+'p']++;grp[dv][br].n++;});
   let sr='';
