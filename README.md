@@ -1,165 +1,307 @@
-# Dashboard ฝ่าย ชบ. — คู่มืออัปเดตข้อมูล
+# Debt Dashboard (บริหารหนี้ฝ่าย ชบ.)
 
-เอกสารนี้สรุปโครงสร้างข้อมูลของแดชบอร์ด 2 ระบบ สำหรับใช้เปิดแชทใหม่กับ Claude
-แล้วให้ทำงานต่อได้ทันทีโดยไม่ต้องไล่วิเคราะห์ mapping ใหม่ทั้งหมด
+Single-file HTML dashboard (`index.html`) hosted on GitHub Pages at
+`https://surathin3320500281957-cmd.github.io`. No backend — all data is
+compressed and embedded directly in the HTML file. Built with vanilla
+JS + Chart.js (via CDN).
 
-**วิธีใช้ในแชทใหม่:** แนบไฟล์นี้ + index.html เดิม + Excel ไฟล์ใหม่ แล้วบอกว่า
-"อัปเดต [ชื่อระบบ] ตาม README และ excel ที่แนบ"
-
----
-
-## ระบบ 1: จัดประโยชน์ (สัญญาเช่า/เช่าจัดประโยชน์)
-
-- **ชื่อไฟล์ output:** `index_จัดประโยชน์.html`
-- **ไฟล์ข้อมูลต้นทาง:** Excel ชีตเดียว (เช่น `fordashboard.xlsx`), sheet "จัดประโยชน์ฝ่าย ชบ." ช่วง A1:W (1,213 แถว ณ ครั้งล่าสุด)
-- **โครงสร้างฝังข้อมูลใน HTML:**
-  ```html
-  <script id="compressedData" type="application/octet-stream">H4sI...(gzip+base64)...</script>
-  ```
-  JS ฝั่งหน้าเว็บใช้ `DecompressionStream('gzip')` decompress แล้ว `JSON.parse` เป็น array ของ **object (มี key เป็นภาษาไทย)** เก็บใน `RAW_DATA`
-
-### Mapping คอลัมน์ Excel → JSON field
-
-| Excel Column | JSON Field | ชนิดข้อมูล | หมายเหตุ |
-|---|---|---|---|
-| บ้านเลขที่ | บ้านเลขที่ | string | |
-| สำนักงาน | สำนักงาน | string | |
-| โครงการ | โครงการ | string | |
-| ชื่อผู้ทำสัญญา | ชื่อผู้ทำสัญญา | string | |
-| วันที่เริ่มต้น | วันที่เริ่มต้น | string | รูปแบบ dd/mm/yyyy (พ.ศ.) |
-| วันที่สิ้นสุด | วันที่สิ้นสุด | string | รูปแบบ dd/mm/yyyy (พ.ศ.) |
-| ค่างวดต่อเดือน | ค่างวดต่อเดือน | float | |
-| หนี้ค้างเดือนก่อน | หนี้ค้างเดือนก่อน | float | ค่าว่าง → 0.0 |
-| เดือนคงเหลือในสัญญา | เดือนคงเหลือในสัญญา | float | แปลงจาก string เป็น float |
-| การแจ้งเตือน | การแจ้งเตือน | string | ดูชุดค่าด้านล่าง |
-| กำหนดต่อสัญญา | กำหนดต่อสัญญา | string | ดูชุดค่าด้านล่าง |
-| ฝ่าย | ฝ่าย | string | |
-| กอง | กอง | string | ดูชุดค่าด้านล่าง |
-| สาขา | สาขา | string | |
-| กิจกรรม | กิจกรรม | string | |
-| การดำเนินการ | การดำเนินการ | string | |
-| วันที่ดำเนินการ | วันที่ดำเนินการ | string | |
-| สถานะสัญญา | สถานะสัญญา | string | ดูชุดค่าด้านล่าง |
-| "  หมายเหตุ" (คอลัมน์ U, มีช่องว่างนำหน้าใน header) | หมายเหตุ | string | ข้อความยาว/บันทึกติดตาม |
-
-**ไม่นำเข้า dashboard:** ชื่อบริษัท, รหัสโครงการ, key, หมายเหตุ (คอลัมน์ L ที่ว่างเปล่า)
-
-### ชุดค่าที่ตรวจสอบแล้ว (ใช้ใน filter/สีของ dashboard — ต้องสะกดตรงเป๊ะ)
-- **กำหนดต่อสัญญา:** `พ้นกำหนด`, `จะครบสัญญาภายใน 3 เดือน`, `เหลือจะครบสัญญาเกิน 3 เดือน`
-- **การแจ้งเตือน:** `พ้นกำหนดการต่อสัญญา`, `จะครบสัญญาภายใน 1 เดือน`, `จะครบสัญญาภายใน 3 เดือน`, `จะครบสัญญาภายใน 6 เดือน`, `ยังไม่กำหนดครบสัญญา`
-- **สถานะสัญญา:** `ไม่ต่อสัญญาเช่า`, `ปกติ`, `ติดตามหนี้`, `""` (ว่าง)
-- **กอง:** `ตบ.1`, `ตบ.2`, `มบ.`
-- **ฝ่าย:** `1006 - ชบ.`
-
-### ขั้นตอนอัปเดต
-1. อ่าน Excel → map เป็น list ของ dict ตามตารางด้านบน
-2. `json.dumps(records, ensure_ascii=False, separators=(',',':'))` → gzip → base64
-3. แทนที่เนื้อหาใน `<script id="compressedData" ...>...</script>` ด้วย base64 ใหม่
-4. ตรวจสอบ: นับจำนวนแถว, decompress กลับมาเช็คแถวแรก/แถวสุดท้าย, รัน `node --check` กับ JS ที่ดึงออกมา, จำลอง `DecompressionStream` ด้วย Node เพื่อยืนยัน pipeline จริงของเบราว์เซอร์
+**When starting a new chat about this project, upload `index.html` plus this
+README so Claude has full context immediately.**
 
 ---
 
-## ระบบ 2: บริหารหนี้ ชบ.
+## 1. What this dashboard does
 
-- **ชื่อไฟล์ output:** `index_บริหารหนี้.html`
-- **ไฟล์ข้อมูลต้นทาง:** Excel หลายชีต (เช่น `บริหารหนี้.xlsx`)
-  - ชีต `เช่า`, `เช่าซื้อ`, `เช่าจัดประโยชน์`, `เช่าซื้อคบส` → รวมกันเป็นตาราง **DEBT**
-  - ชีต `DPDธอส` → ตาราง **DPD**
-  - ชีต `รวมชี้แจง` → ไม่ได้ใช้ในแดชบอร์ด (เป็นสรุป/รายงานแยก)
-- **โครงสร้างฝังข้อมูลใน HTML:** ข้อมูลเป็น **array of array (compact, ไม่มี key)** เพื่อลดขนาดไฟล์ ฝัง 2 ก้อนแยกกัน:
-  ```js
-  const DB64="...(gzip+base64 ของตาราง DEBT)...";
-  const PB64="...(gzip+base64 ของตาราง DPD)...";
-  ```
-  โหลดตอน runtime ด้วย `dcmp()` (เหมือน DecompressionStream) แล้ว map เป็น `DR` (DEBT rows) และ `PR` (DPD rows)
+Two tabs:
 
-### DEBT — object `D` (20 fields, index 0–19)
+1. **บริหารหนี้ตามสัญญา** — debt across 4 contract types (เช่า, เช่าซื้อ,
+   เช่าจัดประโยชน์, เช่าซื้อคบส): totals, KPI ("หนี้ตัวชี้วัด"), ranking
+   charts, filterable detail table, Excel/PDF export.
+2. **DPD ธอส.** — days-past-due tracking sourced from a separate sheet.
 
-Header ในทุกชีตเริ่มที่แถว 7 (1-based), ข้อมูลเริ่มแถว 8
-
-| Index | Field code | ความหมาย | คอลัมน์ Excel (index 0-based ในแถว) | ชนิด |
-|---|---|---|---|---|
-| 0 | tp | ประเภทสัญญา (ชนิดสัญญา) | 1 (B) | string |
-| 1 | dv | กอง | 3 (D) | string |
-| 2 | br | สาขา (สำนักงาน) | 4 (E) | string |
-| 3 | pj | โครงการ | 5 (F) | string |
-| 4 | pl | เลขผัง | 6 (G) | string (เลขที่เป็น float ต้องแปลงเป็น int string) |
-| 5 | hs | บ้านเลขที่ (เลขบ้าน) | 7 (H) | string |
-| 6 | sc | สถานะบริหารหนี้ (เดือนนี้) | 23 (X) | string |
-| 7 | sp | สถานะบริหารหนี้ (เดือนก่อน) | 14 (O) | string |
-| 8 | rc | ช่วงงวดค้าง (เดือนนี้) | 25 (Z) | string |
-| 9 | rp | ช่วงงวดค้าง (เดือนก่อน) | 16 (Q) | string |
-| 10 | ic | งวดค้าง (เดือนนี้) | 26 (AA) | float |
-| 11 | ip | งวดค้าง (เดือนก่อน) | 17 (R) | float |
-| 12 | pc | หนี้ค้าง (เดือนนี้) | 27 (AB) | float |
-| 13 | pp | หนี้ค้าง (เดือนก่อน) | 18 (S) | float |
-| 14 | kc | หนี้ตัวชี้วัด (เดือนนี้) | 29 (AD) | float |
-| 15 | kp | หนี้ตัวชี้วัด (เดือนก่อน) | 20 (U) | float |
-| 16 | tc | การติดตาม (เดือนนี้) | 30 (AE) | string |
-| 17 | tp2 | การติดตาม (เดือนก่อน) | 21 (V) | string |
-| 18 | dc | รายละเอียด (เดือนนี้) | 31 (AF) | string |
-| 19 | dp2 | รายละเอียดการติดตาม (เดือนก่อน) | 22 (W) | string |
-
-**ไม่ใช้ใน dashboard:** ลำดับ, ฝ่าย, CUST_CODE, ชื่อ, สกุล, DUE_PRICE, โทรศัพท์, สถานะสัญญา, กรณีฟ้อง (ทั้งเดือนนี้/ก่อน), หนี้อายุเกิน 3 งวด (ทั้งเดือนนี้/ก่อน)
-
-**ชุดค่าที่ตรวจสอบแล้ว:**
-- `sc`/`sp` (สถานะบริหารหนี้): `กด.1 ส่งฟ้อง`, `กด.2 ส่งฟ้อง (กทม.)`, `กด.2 ส่งฟ้อง (ภูมิภาค)`, `ติดตามทวงถาม`, `ลูกค้าได้รับหนังสือบอกกล่าว`, `ลูกค้าได้รับหนังสือบอกเลิก`, `สช.ชน. ส่งฟ้อง`, `ส่ง กด.2 พิจารณาส่งฟ้อง`, `หนังสือบอกกล่าวมีผล`, `ออกหนังสือบอกกล่าวขับไล่`, `ออกหนังสือบอกเลิก`, `เลิกสัญญา`, `""` (ว่าง = ไม่มีสถานะ)
-- `rc`/`rp` (ช่วงงวดค้าง): `ไม่ค้าง`, `ค้าง 1-2 งวด`, `ค้าง 3 งวด`, `เกิน 3 งวด`
-- `tc`/`tp2` (การติดตาม): `ยังไม่ติดตาม`, `ติดตามแล้ว`
-- `dv` (กอง): `มบ.`, `ตบ.1`, `ตบ.2`
-- `tp` (ประเภทสัญญา): `เช่า`, `เช่าซื้อ`, `เช่าจัดประโยชน์`, `เช่าซื้อ-คบส.` (สังเกต: ชื่อชีต "เช่าซื้อคบส" ไม่มีขีด แต่ค่าจริงในคอลัมน์มีขีด "เช่าซื้อ-คบส.")
-
-### DPD — object `P` (17 fields, index 0–16)
-
-Header ชีต `DPDธอส` อยู่แถว 4, ข้อมูลเริ่มแถว 6
-
-| Index | Field code | ความหมาย | คอลัมน์ Excel (index 0-based) | ชนิด |
-|---|---|---|---|---|
-| 0 | dv | กอง | 1 | string |
-| 1 | br | สำนักงาน | 2 | string |
-| 2 | ln | เลขที่เงินกู้ | 3 | string (แปลงจาก float เป็น int string) |
-| 3 | mo | เดือนรายงาน | 4 | string |
-| 4 | pj | ชื่อโครงการ | 5 | string |
-| 5 | hs | บ้านเลขที่ | 6 | string |
-| 6 | nm | ชื่อผู้กู้ | 8 | string |
-| 7 | la | คำนำหน้าชื่อ | 7 | string (⚠️ ไม่ถูกใช้แสดงผลจริง — client-side มี bug แปลงเป็น 0 ตอนโหลด แต่ไม่กระทบ UI) |
-| 8 | pr | เงินต้นคงเหลือ | 13 | float |
-| 9 | dp | DPD (เดือนก่อน) | 16 | float |
-| 10 | rp | ช่วง DPD (เดือนก่อน) | 17 | string |
-| 11 | tp | การติดตาม (เดือนก่อน) | 18 | string |
-| 12 | dep | รวม (เงินต้น+ดอกเบี้ย) | 15 | float |
-| 13 | dc | DPD (เดือนนี้) | 20 | float |
-| 14 | rc | ช่วง DPD (เดือนนี้) | 21 | string |
-| 15 | tc | การติดตาม (เดือนนี้) | 22 | string |
-| 16 | dec_ | รายละเอียดการติดตาม (เดือนนี้) | 23 | string |
-
-**ไม่ใช้ใน dashboard:** ลำดับ, โทรศัพท์, วงเงินกู้, อัตราดอกเบี้ย, เงินงวด, ดอกเบี้ยคงเหลือ, รายละเอียดการติดตาม (เดือนก่อน)
-
-### ขั้นตอนอัปเดต (บริหารหนี้)
-1. อ่าน 4 ชีต DEBT รวมกัน → build array-of-array ตามตาราง `D` (20 คอลัมน์/แถว)
-2. อ่านชีต `DPDธอส` → build array-of-array ตามตาราง `P` (17 คอลัมน์/แถว)
-3. field ตัวเลข (ic, ip, pc, pp, kc, kp / pr, dp, dep, dc) → บังคับเป็น float, ค่าว่าง/None → 0.0
-4. field ข้อความ → None → `""`, ตัวเลขที่เป็น id (เลขผัง, เลขที่เงินกู้) → แปลงจาก float เป็น int string (ตัด .0)
-5. `json.dumps(..., separators=(',',':'))` → gzip(level 9) → base64 แยกกัน 2 ก้อนสำหรับ DR และ PR
-6. แทนที่ `const DB64="..."` และ `PB64="..."` ในไฟล์ HTML เดิม
-7. ตรวจสอบ: นับแถว (ต้องได้ตามจำนวนจริงในทุกชีตรวมกัน), diff กับข้อมูลเก่าเพื่อดูว่ามีการเปลี่ยนแปลงสมเหตุสมผลไหม, รัน `node --check`, จำลอง decompress ด้วย Node (`DecompressionStream`) ให้ตรงกับที่เบราว์เซอร์จะรันจริง
+Three view modes on the debt tab: **เดือนนี้** (current), **เดือนก่อน**
+(previous), **เปรียบเทียบ** (compare both side by side, deltas).
 
 ---
 
-## กติกาการตั้งชื่อไฟล์ (สำคัญ — กันไฟล์ทับกัน)
+## 2. File map
 
-⚠️ **ห้าม save output เป็นชื่อ `index.html` เฉย ๆ** เพราะทั้งสองระบบใช้ชื่อไฟล์ต้นฉบับเหมือนกัน จะทำให้ไฟล์นึงทับอีกไฟล์นึงในโฟลเดอร์ output
+| File | Purpose |
+|---|---|
+| `index.html` | The entire app — HTML/CSS/JS + embedded gzip+base64 data blobs (`DB64`, `PB64`) |
+| `.nojekyll` | Empty file at repo root. **Required** — without it GitHub Pages runs Jekyll on the file and deploys take 8–9 min instead of ~10–25s. Already in the repo; don't remove it. |
 
-ใช้ชื่อนี้เสมอ:
-- `index_จัดประโยชน์.html`
-- `index_บริหารหนี้.html`
+No build step. Editing `index.html` and pushing to `main` is the entire
+deploy process.
 
 ---
 
-## วิธีเริ่มงานในแชทใหม่
+## 3. Updating data from a new Excel export
 
-พิมพ์ประมาณนี้พร้อมแนบไฟล์:
+The source file is always named like `บริหารหนี้....xlsx` with sheets:
+`เช่า`, `เช่าซื้อ`, `เช่าจัดประโยชน์`, `เช่าซื้อคบส`, `DPDธอส` (a `รวมชี้แจง`
+sheet sometimes appears too — it's a different, unrelated data shape and is
+**not** currently ingested).
 
-> "นี่คือ README สำหรับ dashboard ฝ่าย ชบ. ผมมีไฟล์ index_จัดประโยชน์.html (หรือ index_บริหารหนี้.html) เดิม กับ Excel ข้อมูลใหม่แนบมาด้วย ช่วยอัปเดตตาม mapping ใน README ให้หน่อยครับ"
+### 3.1 Contract sheets → `DR` array → `DB64`
 
-Claude จะใช้ mapping ในเอกสารนี้ทำงานได้ทันทีโดยไม่ต้องไล่วิเคราะห์โครงสร้างใหม่
+Each contract sheet has **merged headers spanning rows 0–2, data starts at
+row 7** (`skiprows=7` in pandas). Key column indices (0-based, same across
+all 4 contract sheets):
+
+| Excel col | Meaning |
+|---|---|
+| 1 | ชนิดสัญญา (tp) |
+| 3 | กอง (dv) |
+| 4 | สาขา (br) |
+| 5 | โครงการ (pj) |
+| 6 | เลขผัง (pl) |
+| 7 | เลขบ้าน (hs) |
+| 14 | (เดือนก่อน) งวดค้าง |
+| 15 | (เดือนก่อน) กรณีฟ้อง |
+| 16 | (เดือนก่อน) ช่วงงวดค้าง |
+| 17 | (เดือนก่อน) งวดค้าง — ⚠ same label as col 14, this is the numeric one used |
+| 18 | (เดือนก่อน) หนี้ค้าง |
+| 19 | (เดือนก่อน) หนี้อายุเกิน 3 งวด |
+| 20 | (เดือนก่อน) หนี้ตัวชี้วัด |
+| 21 | (เดือนก่อน) การติดตาม |
+| 22 | (เดือนก่อน) รายละเอียดการติดตาม |
+| 23 | (เดือนนี้) สถานะบริหารหนี้ |
+| 25 | (เดือนนี้) ช่วงงวดค้าง |
+| 26 | (เดือนนี้) งวดค้าง |
+| 27 | (เดือนนี้) หนี้ค้าง |
+| 28 | (เดือนนี้) อายุหนี้เกิน 3 งวด |
+| 29 | (เดือนนี้) หนี้ตัวชี้วัด |
+| 30 | (เดือนนี้) การติดตาม |
+| 31 | (เดือนนี้) รายละเอียดการติดตาม |
+
+**⚠ Known trap:** columns 28 ("หนี้อายุเกิน 3 งวด") and 29 ("หนี้ตัวชี้วัด")
+sit right next to each other and were confused once before (shipped wrong
+totals). **Always validate `kc`/`kp` sums against the sheet's own header
+row** before embedding — see §3.3.
+
+Each output row of `DR` (order matters — matches the `D` index map in
+`index.html`):
+
+```python
+row = [S(r[1]),S(r[3]),S(r[4]),S(r[5]),S(r[6]),S(r[7]),
+       S(r[23]),S(r[14]),S(r[25]),S(r[16]),
+       N(r[26]),N(r[17]),N(r[27]),N(r[18]),N(r[29]),N(r[20]),
+       S(r[30]),S(r[21]),S(r[31]),S(r[22])]
+```
+
+`S()` = string-clean (strip, blank for NaN, drop trailing `.0` on numbers
+stored as float). `N()` = numeric-clean, round to 2dp, 0 for NaN.
+
+In `index.html`, `const D={tp:0,dv:1,br:2,pj:3,pl:4,hs:5,sc:6,sp:7,rc:8,
+rp:9,ic:10,ip:11,pc:12,pp:13,kc:14,kp:15,tc:16,tp2:17,dc:18,dp2:19,pf:20}`
+— `*c`/`*2`/no-suffix = เดือนนี้ (current), `*p` = เดือนก่อน (previous).
+
+### 3.2 DPD sheet → `PR` array → `PB64`
+
+Header spans rows 0–4, data starts at row 5 (`skiprows=5`). Columns:
+1=กอง(dv), 2=สาขา(br), 3=เลขผัง(ln), 4=เดือน(mo), 5=โครงการ(pj),
+6=เลขบ้าน(hs), 7=คำนำหน้า(la), 8=ชื่อ(nm), 13=(เดือนนี้)หนี้ค้าง(pr),
+16=(เดือนก่อน)หนี้ค้าง(dp), 17=(เดือนก่อน)ช่วง DPD(rp),
+18=(เดือนก่อน)การติดตาม(tp), 15=(เดือนนี้)อายุหนี้(dep),
+20=(เดือนนี้)หนี้ค้าง(dc), 21=(เดือนนี้)ช่วง DPD(rc),
+22=(เดือนนี้)การติดตาม(tc), 23=รายละเอียด(dec_).
+
+`const P={dv:0,br:1,ln:2,mo:3,pj:4,hs:5,nm:6,la:7,pr:8,dp:9,rp:10,tp:11,
+dep:12,dc:13,rc:14,tc:15,dec_:16}`.
+
+DPD range strings are like `"DPD 1-30 วัน"`, `"DPD 61-90 วัน"`,
+`"DPD เกิน 90 วัน"` — full string including the `"DPD "` prefix.
+
+### 3.3 Build + validate + embed (the actual repeatable recipe)
+
+```python
+import pandas as pd, math, json, gzip, base64
+
+xl = pd.ExcelFile('บริหารหนี้....xlsx')
+
+def S(v):
+    if v is None or (isinstance(v,float) and math.isnan(v)): return ''
+    if isinstance(v,float) and v.is_integer(): return str(int(v))
+    return str(v).strip()
+def N(v):
+    if v is None or (isinstance(v,float) and math.isnan(v)): return 0
+    try: return round(float(v),2)
+    except: return 0
+
+# --- validate BEFORE trusting any total: compare column sums against
+#     each sheet's own header row (row idx 0/1/2, col 15 = เดือนก่อน value,
+#     col 30 = เดือนนี้ value) ---
+metrics = [('หนี้ค้างรวม (ก่อน)',0,15,18), ('หนี้ค้างรวม (นี้)',0,30,27),
+           ('เกิน 3 เดือน (ก่อน)',1,15,19), ('เกิน 3 เดือน (นี้)',1,30,28),
+           ('หนี้ตัวชี้วัด (ก่อน)',2,15,20), ('หนี้ตัวชี้วัด (นี้)',2,30,29)]
+for s in ['เช่า','เช่าซื้อ','เช่าจัดประโยชน์','เช่าซื้อคบส']:
+    hdr = pd.read_excel(xl, sheet_name=s, header=None, nrows=3)
+    df  = pd.read_excel(xl, sheet_name=s, header=None, skiprows=7)
+    for name,hr,hc,dc in metrics:
+        exp, got = N(hdr.iloc[hr,hc]), sum(N(v) for v in df[dc])
+        assert abs(exp-got) < 1, f'{s} {name}: header={exp} got={got}'
+
+# --- build DR ---
+DR = []
+for s in ['เช่า','เช่าซื้อ','เช่าจัดประโยชน์','เช่าซื้อคบส']:
+    df = pd.read_excel(xl, sheet_name=s, header=None, skiprows=7)
+    for r in df.itertuples(index=False):
+        r = list(r)
+        DR.append([S(r[1]),S(r[3]),S(r[4]),S(r[5]),S(r[6]),S(r[7]),
+                   S(r[23]),S(r[14]),S(r[25]),S(r[16]),
+                   N(r[26]),N(r[17]),N(r[27]),N(r[18]),N(r[29]),N(r[20]),
+                   S(r[30]),S(r[21]),S(r[31]),S(r[22])])
+
+# --- build PR ---
+PR = []
+df = pd.read_excel(xl, sheet_name='DPDธอส', header=None, skiprows=5)
+for r in df.itertuples(index=False):
+    r = list(r)
+    PR.append([S(r[1]),S(r[2]),S(r[3]),S(r[4]),S(r[5]),S(r[6]),S(r[8]),S(r[7]),
+               N(r[13]),N(r[16]),S(r[17]),S(r[18]),N(r[15]),N(r[20]),
+               S(r[21]),S(r[22]),S(r[23])])
+
+db64 = base64.b64encode(gzip.compress(json.dumps(DR,ensure_ascii=False,separators=(',',':')).encode())).decode()
+pb64 = base64.b64encode(gzip.compress(json.dumps(PR,ensure_ascii=False,separators=(',',':')).encode())).decode()
+
+# --- embed into index.html ---
+import re
+with open('index.html', encoding='utf-8') as f: c = f.read()
+c = re.sub(r'DB64="[^"]*"', 'DB64="'+db64+'"', c, count=1)
+c = re.sub(r'PB64="[^"]*"', 'PB64="'+pb64+'"', c, count=1)
+with open('index.html', 'w', encoding='utf-8') as f: f.write(c)
+```
+
+Also update the static header labels if the record counts / month changed:
+`<span class="hbg">18,589 รายการ</span>`, the DPD count badge, and the
+month badge (`มิ.ย. 2569` etc — DPD sheet's title row says the month, e.g.
+`หนี้ค้าง DPD ธอส. ส.ค.69`).
+
+**Before deciding data "didn't change," diff it** — two uploads with the
+same `Contract_Active_Dm` date stamp have genuinely differed before (one
+had 362 rows with retroactively-updated follow-up notes; another had
+"หนี้ตัวชี้วัด (เดือนก่อน)" flip from all-zero to real values). Compare
+row-by-row against the previously-embedded blob, don't assume identical
+dates mean identical content.
+
+### 3.4 After embedding: always render-test before shipping
+
+Headless-render `index.html` (Playwright; a chromium binary may already be
+at `/opt/pw-browsers` — set `PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers`
+before falling back to `npx playwright install`, which is usually blocked
+by the sandbox's network allowlist). CDN scripts (Chart.js, datalabels
+plugin, Google Fonts) are blocked in the sandbox — swap the two
+`<script src="https://cdnjs...">` tags for local copies
+(`npm install chart.js@4.4.1 chartjs-plugin-datalabels@2.2.0`, then point
+the `<script>` tags at the local files) for local testing only; ship the
+original CDN-referencing file.
+
+Check: `DR.length` / `PR.length` match expected row counts, the 4 KPI cards
+match the validated totals, switch to DPD tab and check its KPI row,
+switch เดือนนี้/เดือนก่อน/เปรียบเทียบ and re-check, no console errors besides
+the expected sandbox CDN 403s.
+
+---
+
+## 4. Ranking chart label design (why it looks the way it does)
+
+The three "Ranking …" bar charts and the two DPD ranking charts don't use
+Chart.js's normal axes. Long Thai labels used to get clipped to 2–3
+characters when the page's 3-column grid squeezed each chart's y-axis on
+mobile. Fix, iterated over several rounds:
+
+- Both axes hidden (`scales:{x:{display:false},y:{display:false}}`).
+- `chartjs-plugin-datalabels` draws the **item name inside the bar at the
+  start** (`anchor:'start',align:'end',offset:8`, dark text + white stroke
+  for contrast against any bar color) and the **value as a solid dark
+  rounded badge right at the bar's tip** (`anchor:'end',align:'end',
+  offset:6`, white text — keep this a flat number; an earlier dynamic
+  offset-to-avoid-overlap formula was tried and explicitly rejected by the
+  user as "too clever" — the opaque badge already reads fine even when it
+  slightly overlaps the name text).
+- `layout.padding.right` (110px) reserves room so the largest bar's badge
+  doesn't clip off the canvas edge.
+- Font size 14 / bold, container heights 460px (main 3) / 360px (DPD 2) —
+  bumped up from the original 8px/310px for an executive audience with
+  poor eyesight.
+- `Chart.defaults.set('plugins.datalabels',{display:false})` globally,
+  then explicitly `display:true` per-chart — **don't forget the explicit
+  `display:true`**, it's easy to leave it inheriting the global default
+  and get silently blank labels.
+
+Truncation (`cl(label, N)`) is still applied per chart (~20–30 chars) since
+labels overlay a finite-width canvas even without a reserved axis column.
+
+---
+
+## 5. Filter system (บริหารหนี้ตามสัญญา tab)
+
+Two parallel filter mechanisms feed the same `DF` (filtered dataset):
+
+- **Dropdowns** (`f-type`, `f-div`, `f-br`, `f-pj`, `f-st`, `f-tr`,
+  `f-rng`, `f-inst`, `f-trend`, `f-trendi`, `f-kpi`) — top filter bar,
+  read in `applyF()`.
+- **Click-to-drill** (`DS.st`, `DS.br`, `DS.pj`, `DS.rng`, `DS.plan`) —
+  clicking a bar/pie segment in a chart sets one of these; also read in
+  `applyF()`. Both mechanisms AND together.
+
+`f-inst` ("งวดค้าง", exact installment count) and `f-trend`/`f-trendi`
+("แนวโน้ม…") are worth knowing about if extending this further:
+
+- `f-inst` options are capped at 24 explicit values + a `"25+"` bucket
+  (`value="25+"`) because the real installment-count distribution has a
+  long tail out to 254 with only ~200 records above 20 — don't populate
+  one `<option>` per distinct value found in the data, it balloons to
+  250+ entries.
+- `f-trend` compares **debt amount** (`pc - pp`); `f-trendi` compares
+  **installment count** (`ic - ip`). These are genuinely different signals
+  (a partial payment can shrink the amount owed without changing the
+  installment count) — both exist side-by-side on purpose, not
+  redundant. Only shown in "เปรียบเทียบ" view mode.
+
+**Active-filter badges**: `bdg()` renders one colored, individually-
+dismissible chip per active filter (dropdown or click-drill) into
+`#d-bdg`, styled via `.fchip` + a per-category color class (`.fc-type`,
+`.fc-div`, `.fc-br`, `.fc-pj`, `.fc-st`, `.fc-tr`, `.fc-rng`, `.fc-inst`,
+`.fc-trend`, `.fc-trendi`, `.fc-kpi`, `.fc-ds` for click-drill). Each
+chip's `✕` calls `clrF(id)` (dropdown) or `clrF('ds:'+key)` (click-drill)
+to clear just that one filter and re-run `applyF()`.
+
+**DPD ธอส. tab currently has no filters at all** — nothing to badge there.
+If asked to add filters there too, that's new work, not a copy of the
+existing system.
+
+---
+
+## 6. GitHub Pages deployment notes
+
+- Repo: `surathin3320500281957-cmd.github.io`, deploy source = GitHub
+  Actions ("pages build and deployment" workflow), branch `main`.
+- `.nojekyll` must exist at repo root — without it, Jekyll processes the
+  large single-file HTML unnecessarily and deploys take 8–9 minutes
+  (still succeeds, just slow).
+- Occasional single-run failures with `Error: Deployment failed, try
+  again later.` are a transient GitHub-side issue, not a file problem —
+  re-push (even a no-op change) to trigger a fresh run.
+- To upload a new `index.html`: repo → Code → open `index.html` → edit
+  (pencil icon) or **Add file → Upload files** to replace it wholesale →
+  Commit directly to `main`.
+
+---
+
+## 7. History / decisions worth knowing before changing things again
+
+- Font/layout was bumped up once already for readability (§4) — don't
+  shrink it back without asking.
+- The dynamic-offset badge-positioning experiment (computing offset from
+  measured text width to avoid name/value overlap) was built, verified
+  working, then **explicitly reverted** in favor of a flat `offset:4`
+  because the user found the simple version equally readable and less
+  fragile. Don't reintroduce dynamic positioning unless asked.
+- "หนี้ตัวชี้วัด" (indicator debt) is legally/definitionally **หนี้อายุ
+  เกิน 3 งวด, minus cases sued before the current fiscal year** — the
+  Excel formula already bakes this in (col 29/20), don't recompute it
+  from other columns.
+- Same-dated Excel re-uploads have contained real content changes twice
+  now (§3.3) — always diff, never assume "same date = skip."
