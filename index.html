@@ -53,6 +53,22 @@ body{font-family:var(--font);font-size:15px;background:#eef2f7;color:var(--g800)
 .fsep{width:1px;height:22px;background:var(--g200);margin:0 2px}
 .fbdg{background:#fff8e6;border:1px solid #f0c060;border-radius:10px;padding:7px 12px;margin-bottom:10px;font-size:13px;color:#7a4e00;display:none;align-items:center;gap:8px}
 .fbdg button{background:none;border:none;cursor:pointer;color:#7a4e00;font-weight:700;font-size:15px;line-height:1}
+.fbdg2{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.fchip{display:inline-flex;align-items:center;gap:7px;border-radius:999px;padding:6px 9px 6px 14px;font-size:12.5px;font-weight:700;white-space:nowrap;color:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.15)}
+.fchip button{background:rgba(255,255,255,0.28);border:none;border-radius:50%;width:18px;height:18px;line-height:1;color:#fff;font-weight:700;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
+.fchip button:hover{background:rgba(255,255,255,0.45)}
+.fc-type{background:#2563eb}
+.fc-div{background:#7c3aed}
+.fc-br{background:#059669}
+.fc-pj{background:#d97706}
+.fc-st{background:#0d9488}
+.fc-tr{background:#db2777}
+.fc-rng{background:#dc2626}
+.fc-inst{background:#4f46e5}
+.fc-trend{background:#0891b2}
+.fc-trendi{background:#c026d3}
+.fc-kpi{background:#a16207}
+.fc-ds{background:#334155}
 
 /* ── KPI CARDS ── */
 .kg{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:18px}
@@ -171,13 +187,17 @@ td.kps{color:var(--am);font-weight:700}
     <select id="f-tr" onchange="applyF()"><option value="">ทั้งหมด</option></select>
     <label>ช่วงงวดค้าง:</label>
     <select id="f-rng" onchange="applyF()"><option value="">ทั้งหมด</option><option>ไม่ค้าง</option><option>ค้าง 1-2 งวด</option><option>ค้าง 3 งวด</option><option>เกิน 3 งวด</option></select>
-    <label id="lbl-trend" style="display:none">แนวโน้มหนี้:</label>
+    <label>งวดค้าง:</label>
+    <select id="f-inst" onchange="applyF()"><option value="">ทั้งหมด</option></select>
+    <label id="lbl-trend" style="display:none">แนวโน้มหนี้ (บาท):</label>
     <select id="f-trend" onchange="applyF()" style="display:none"><option value="">ทั้งหมด</option><option value="up">เพิ่มขึ้น</option><option value="down">ลดลง</option><option value="same">เท่าเดิม</option></select>
+    <label id="lbl-trendi" style="display:none">แนวโน้มงวดค้าง:</label>
+    <select id="f-trendi" onchange="applyF()" style="display:none"><option value="">ทั้งหมด</option><option value="up">เพิ่มขึ้น</option><option value="down">ลดลง</option><option value="same">เท่าเดิม</option></select>
     <label>ตัวชี้วัด:</label>
     <select id="f-kpi" onchange="applyF()"><option value="">ทั้งหมด</option><option value="1">มีหนี้ตัวชี้วัด</option><option value="0">ไม่มี</option></select>
     <button class="btn" onclick="resetF()">&#10006; ล้าง</button>
   </div>
-  <div class="fbdg" id="d-bdg"><span id="d-bdg-txt"></span><button onclick="resetF()">&#10006;</button></div>
+  <div class="fbdg2" id="d-bdg"></div>
   <div class="kg" id="d-kpi"></div>
   <div class="knote"><span style="font-size:15px">&#128204;</span><span><strong>หนี้ตัวชี้วัด</strong> หมายถึง หนี้อายุเกิน 3 งวด <em>รวม</em>หนี้ที่ฟ้องในปีงบประมาณปัจจุบัน — ยิ่งน้อยยิ่งดี</span></div>
   <div class="g4">
@@ -312,20 +332,32 @@ function initDF(){
   fi('f-pj',[...new Set(DR.map(r=>r[D.pj]).filter(v=>v&&v!==''))].sort());
   fi('f-st',[...new Set(DR.map(r=>r[D.sc]).filter(v=>v&&v!==''))].sort());
   fi('f-tr',[...new Set(DR.map(r=>r[D.tc]).filter(v=>v&&v!==''))].sort());
+  const maxInst=Math.max(0,...DR.map(r=>r[D.ic]||0),...DR.map(r=>r[D.ip]||0));
+  const instEl=document.getElementById('f-inst');
+  if(instEl){
+    instEl.add(new Option('ไม่ค้าง','0'));
+    const cap=Math.min(maxInst,24);
+    for(let n=1;n<=cap;n++)instEl.add(new Option(n+' งวด',String(n)));
+    if(maxInst>24)instEl.add(new Option('25 งวดขึ้นไป','25+'));
+  }
 }
 function setView(v){
   DV=v;['curr','prev','cmp'].forEach(n=>{const el=document.getElementById('tv-'+n);if(el)el.className='tb'+(n===v?' active':'');});
   const isCmp=v==='cmp';
   const lt=document.getElementById('lbl-trend'),ft=document.getElementById('f-trend');
+  const lti=document.getElementById('lbl-trendi'),fti=document.getElementById('f-trendi');
   if(lt)lt.style.display=isCmp?'':'none';
   if(ft){ft.style.display=isCmp?'':'none';if(!isCmp)ft.value='';}
+  if(lti)lti.style.display=isCmp?'':'none';
+  if(fti){fti.style.display=isCmp?'':'none';if(!isCmp)fti.value='';}
   applyF();
 }
 function applyF(){
   const g=id=>{const el=document.getElementById(id);return el?el.value:'';};
-  const tp=g('f-type'),dv=g('f-div'),br=g('f-br'),pj=g('f-pj'),st=g('f-st'),tr=g('f-tr'),rng=g('f-rng'),kp=g('f-kpi'),trend=g('f-trend');
+  const tp=g('f-type'),dv=g('f-div'),br=g('f-br'),pj=g('f-pj'),st=g('f-st'),tr=g('f-tr'),rng=g('f-rng'),inst=g('f-inst'),kp=g('f-kpi'),trend=g('f-trend'),trendi=g('f-trendi');
   const vST=r=>DV==='prev'?r[D.sp]:r[D.sc];
   const vRNG=r=>DV==='prev'?r[D.rp]:r[D.rc];
+  const vPI=r=>DV==='prev'?r[D.ip]:r[D.ic];
   // update branch when div changes
   if(dv){
     const bsel=document.getElementById('f-br');
@@ -351,15 +383,17 @@ function applyF(){
     if(st&&vST(r)!==st)return false;
     if(tr&&r[D.tc]!==tr)return false;
     if(rng&&vRNG(r)!==rng)return false;
+    if(inst!==''){if(inst==='25+'){if(vPI(r)<25)return false;}else if(vPI(r)!==Number(inst))return false;}
     if(kp==='1'&&!(r[D.kc]>0))return false;
     if(kp==='0'&&r[D.kc]>0)return false;
     if(trend){const diff=r[D.pc]-r[D.pp];if(trend==='up'&&diff<=0)return false;if(trend==='down'&&diff>=0)return false;if(trend==='same'&&diff!==0)return false;}
+    if(trendi){const diffI=(r[D.ic]||0)-(r[D.ip]||0);if(trendi==='up'&&diffI<=0)return false;if(trendi==='down'&&diffI>=0)return false;if(trendi==='same'&&diffI!==0)return false;}
     return true;
   });
   renderDebt();
 }
 function resetF(){
-  ['f-type','f-div','f-br','f-pj','f-st','f-tr','f-rng','f-kpi','f-trend'].forEach(id=>{
+  ['f-type','f-div','f-br','f-pj','f-st','f-tr','f-rng','f-inst','f-kpi','f-trend','f-trendi'].forEach(id=>{
     const el=document.getElementById(id);
     if(el){
       if(id==='f-br'){while(el.options.length>1)el.remove(1);[...new Set(DR.map(r=>r[D.br]).filter(v=>v&&v!==''))].sort().forEach(v=>el.add(new Option(v,v)));}
@@ -374,15 +408,40 @@ function toggleSK(){
   if(btn){btn.innerHTML=sortKPI?'&#9650; เรียง KPI':'&#9660; เรียง KPI';btn.style.background=sortKPI?'#fff8e6':'#fff3dc';btn.style.borderColor=sortKPI?'#b86e00':'#f0c060';}
   renderDDet(DF,DV==='prev',DV==='cmp');
 }
+function clrF(kind){
+  if(kind.indexOf('ds:')===0){DS[kind.slice(3)]='';applyF();return;}
+  const el=document.getElementById(kind);
+  if(el)el.value='';
+  applyF();
+}
 function bdg(){
-  const it=[];
-  if(DS.st)it.push('สถานะ: '+cl(DS.st,14));
-  if(DS.br)it.push('สาขา: '+DS.br);
-  if(DS.pj)it.push('โครงการ: '+cl(DS.pj,16));
-  if(DS.rng)it.push('งวด: '+DS.rng);
-  if(DS.plan)it.push('เลขผัง: '+DS.plan);
+  const chips=[];
+  const addSel=(id,label,cls)=>{
+    const el=document.getElementById(id);
+    if(el&&el.value!==''&&el.offsetParent!==null){
+      const opt=el.options[el.selectedIndex];
+      const txt=opt?opt.text:el.value;
+      chips.push({label:label+': '+cl(txt,20),clear:id,cls:cls});
+    }
+  };
+  addSel('f-type','ประเภท','fc-type');
+  addSel('f-div','กอง','fc-div');
+  addSel('f-br','สาขา','fc-br');
+  addSel('f-pj','โครงการ','fc-pj');
+  addSel('f-st','สถานะบริหารหนี้','fc-st');
+  addSel('f-tr','การติดตาม','fc-tr');
+  addSel('f-rng','ช่วงงวดค้าง','fc-rng');
+  addSel('f-inst','งวดค้าง','fc-inst');
+  addSel('f-trend','แนวโน้มหนี้ (บาท)','fc-trend');
+  addSel('f-trendi','แนวโน้มงวดค้าง','fc-trendi');
+  addSel('f-kpi','ตัวชี้วัด','fc-kpi');
+  if(DS.st)chips.push({label:'สถานะ (คลิก): '+cl(DS.st,14),clear:'ds:st',cls:'fc-ds'});
+  if(DS.br)chips.push({label:'สาขา (คลิก): '+DS.br,clear:'ds:br',cls:'fc-ds'});
+  if(DS.pj)chips.push({label:'โครงการ (คลิก): '+cl(DS.pj,16),clear:'ds:pj',cls:'fc-ds'});
+  if(DS.rng)chips.push({label:'งวด (คลิก): '+DS.rng,clear:'ds:rng',cls:'fc-ds'});
+  if(DS.plan)chips.push({label:'เลขผัง (คลิก): '+DS.plan,clear:'ds:plan',cls:'fc-ds'});
   const el=document.getElementById('d-bdg');
-  if(el){el.style.display=it.length?'flex':'none';const t=document.getElementById('d-bdg-txt');if(t)t.textContent=it.join(' | ');}
+  if(el)el.innerHTML=chips.map(c=>'<span class="fchip '+c.cls+'">'+c.label+'<button onclick="clrF(\''+c.clear+'\')" title="ล้างตัวกรองนี้">&#10005;</button></span>').join('');
 }
 
 function renderDebt(){
