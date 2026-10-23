@@ -31,6 +31,16 @@ body{font-family:var(--font);font-size:15px;background:#eef2f7;color:var(--g800)
 .hbg{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);font-size:13px;padding:4px 12px;border-radius:20px;font-weight:500}
 
 /* ── NAV ── */
+.rkg{grid-template-columns:repeat(auto-fit,minmax(min(100%,520px),1fr))!important}
+.rk{display:flex;flex-direction:column;gap:10px;padding:4px 0}
+.rk-row{display:grid;grid-template-columns:30px 1fr auto;align-items:center;gap:12px}
+.rk-n{font-size:16px;font-weight:600;color:var(--g400);text-align:right}
+.rk-tr{position:relative;min-width:0;display:flex;align-items:center;min-height:44px}
+.rk-bar{position:absolute;left:0;top:0;bottom:0;border-radius:999px}
+.rk-nm{position:relative;margin:0 5px;background:#7c3aed;color:#fff;font-size:16px;font-weight:700;border-radius:18px;padding:5px 14px;line-height:1.25;max-width:calc(100% - 10px);overflow-wrap:anywhere}
+.rk-v{background:rgba(31,27,45,.92);color:#fff;font-size:17px;font-weight:700;border-radius:10px;padding:7px 14px;min-width:96px;text-align:center}
+.rk-no{color:var(--g400);padding:20px;text-align:center}
+@media(max-width:700px){.rk-row{gap:8px;grid-template-columns:24px 1fr auto}.rk-nm{font-size:14px;padding:4px 10px}.rk-v{font-size:15px;min-width:76px;padding:6px 8px}}
 .nav{background:#fff;border-bottom:2px solid var(--g200);padding:0 24px;display:flex;gap:2px;box-shadow:0 2px 6px rgba(0,0,0,.06)}
 .ntab{padding:14px 20px;font-size:15px;font-weight:600;cursor:pointer;border:none;background:none;color:var(--g400);border-bottom:3px solid transparent;font-family:var(--font);display:flex;align-items:center;gap:6px;white-space:nowrap;transition:.2s;margin-bottom:-2px}
 .ntab:hover{color:var(--pri);background:var(--pri-lt)}.ntab.active{color:var(--pri);border-bottom-color:var(--pri)}
@@ -202,10 +212,10 @@ td.kps{color:var(--am);font-weight:700}
     <div class="cc"><div class="ct">หนี้ตัวชี้วัด รายสาขา (บาท)</div><div class="cs" id="b2s">เดือนนี้</div><div style="position:relative;height:185px"><canvas id="ch-b2"></canvas></div></div>
     <div class="cc"><div class="ct">ช่วงงวดค้าง</div><div class="cs">สัดส่วนงวดค้าง</div><div class="leg" id="rng-leg"></div><div style="position:relative;height:145px"><canvas id="ch-rng"></canvas></div></div>
   </div>
-  <div class="g3">
-    <div class="cc"><div class="ct">Ranking หนี้รวม รายโครงการ Top15 (บาท)</div><div style="position:relative;height:460px"><canvas id="ch-rk1"></canvas></div></div>
-    <div class="cc"><div class="ct">Ranking หนี้ตัวชี้วัด รายโครงการ Top15 (บาท)</div><div style="position:relative;height:460px"><canvas id="ch-rk2"></canvas></div></div>
-    <div class="cc"><div class="ct">Ranking หนี้ตัวชี้วัด รายเลขผัง Top15 (บาท)</div><div style="position:relative;height:460px"><canvas id="ch-rkp"></canvas></div></div>
+  <div class="g3 rkg">
+    <div class="cc"><div class="ct">Ranking หนี้รวม รายโครงการ Top15 (บาท)</div><div class="rk" id="ch-rk1"></div></div>
+    <div class="cc"><div class="ct">Ranking หนี้ตัวชี้วัด รายโครงการ Top15 (บาท)</div><div class="rk" id="ch-rk2"></div></div>
+    <div class="cc"><div class="ct">Ranking หนี้ตัวชี้วัด รายเลขผัง Top15 (บาท)</div><div class="rk" id="ch-rkp"></div></div>
   </div>
   <div class="tc" id="delta-charts-row" style="display:none;gap:10px;flex-wrap:wrap;margin-bottom:10px">
     <div style="flex:1 1 280px;min-width:240px">
@@ -264,6 +274,16 @@ async function dcmp(b64){
   const tot=ch.reduce((s,c)=>s+c.length,0),out=new Uint8Array(tot);
   let off=0;for(const c of ch){out.set(c,off);off+=c.length;}
   return new TextDecoder().decode(out);
+}
+function mkRank(id,labels,vals){
+  const el=document.getElementById(id);if(!el)return;
+  if(!vals.length){el.innerHTML='<div class="rk-no">ไม่มีข้อมูล</div>';return;}
+  const mx=Math.max(...vals,1),n=vals.length;
+  el.innerHTML=vals.map((v,i)=>{
+    const h=Math.round(28+(280-28)*(n>1?i/(n-1):0)),w=Math.max(v/mx*100,8);
+    const nm=String(labels[i]).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+    return `<div class="rk-row"><div class="rk-n">${i+1}</div><div class="rk-tr"><div class="rk-bar" style="width:${w}%;background:hsl(${h},68%,58%)" title="${nm}: ${fmt(v)}"></div><span class="rk-nm" title="${nm}">${nm}</span></div><div class="rk-v">${fmt(v)}</div></div>`;
+  }).join('');
 }
 function mkC(id,type,data,opts){
   Chart.defaults.font.family=getComputedStyle(document.body).getPropertyValue('--font')||'IBM Plex Sans Thai,sans-serif';
@@ -474,15 +494,13 @@ function renderDebt(){
   const pm={};d.forEach(r=>{const p=r[D.pj]||'?';if(!pm[p])pm[p]={pc:0,pp:0,kc:0,kp:0};pm[p].pc+=r[D.pc];pm[p].pp+=r[D.pp];pm[p].kc+=r[D.kc];pm[p].kp+=r[D.kp];});
   const t15p=Object.entries(pm).sort((a,b)=>(ip?b[1].pp:b[1].pc)-(ip?a[1].pp:a[1].pc)).slice(0,15);
   const t15k=Object.entries(pm).filter(e=>(ip?e[1].kp:e[1].kc)>0).sort((a,b)=>(ip?b[1].kp:b[1].kc)-(ip?a[1].kp:a[1].kc)).slice(0,15);
-  const rkPl={legend:{display:false},datalabels:{display:true,clip:false,clamp:true,color:'#1f2937',textStrokeColor:'#fff',textStrokeWidth:4,font:{size:14,weight:600},labels:{name:{anchor:'start',align:'end',offset:8,formatter:(v,ctx)=>ctx.chart.data.labels[ctx.dataIndex]},value:{anchor:'end',align:'end',offset:6,textStrokeWidth:0,color:'#fff',backgroundColor:'rgba(31,27,45,0.9)',borderRadius:7,padding:{top:6,bottom:6,left:10,right:10},font:{size:14,weight:700},formatter:v=>fmt(v)}}}};
-  const iya={indexAxis:'y',layout:{padding:{left:4,right:110}},scales:{y:{display:false},x:{display:false}},plugins:rkPl};
-  mkC('ch-rk1','bar',{labels:t15p.map(e=>cl(e[0],20)),datasets:[{data:t15p.map(e=>ip?e[1].pp:e[1].pc),backgroundColor:C.bl,borderWidth:0}]},iya);
-  mkC('ch-rk2','bar',{labels:t15k.map(e=>cl(e[0],20)),datasets:[{data:t15k.map(e=>ip?e[1].kp:e[1].kc),backgroundColor:C.am,borderWidth:0}]},iya);
+  mkRank('ch-rk1',t15p.map(e=>e[0]),t15p.map(e=>ip?e[1].pp:e[1].pc));
+  mkRank('ch-rk2',t15k.map(e=>e[0]),t15k.map(e=>ip?e[1].kp:e[1].kc));
 
   // RANKING plan
   const plm={};d.forEach(r=>{const pl=r[D.pl];if(!pl||pl==='')return;if(!plm[pl])plm[pl]={kc:0,kp:0,pj:r[D.pj]};plm[pl].kc+=r[D.kc];plm[pl].kp+=r[D.kp];});
   const t15pl=Object.entries(plm).filter(e=>(ip?e[1].kp:e[1].kc)>0).sort((a,b)=>(ip?b[1].kp:b[1].kc)-(ip?a[1].kp:a[1].kc)).slice(0,15);
-  mkC('ch-rkp','bar',{labels:t15pl.map(e=>e[0]+' ('+cl(e[1].pj,10)+')'),datasets:[{data:t15pl.map(e=>ip?e[1].kp:e[1].kc),backgroundColor:C.pu,borderWidth:0}]},iya);
+  mkRank('ch-rkp',t15pl.map(e=>e[0]+' ('+e[1].pj+')'),t15pl.map(e=>ip?e[1].kp:e[1].kc));
 
   renderDSum(d,ip,ic);renderDDet(d,ip,ic);
 }
