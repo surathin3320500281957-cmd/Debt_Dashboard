@@ -305,3 +305,12 @@ existing system.
   from other columns.
 - Same-dated Excel re-uploads have contained real content changes twice
   now (§3.3) — always diff, never assume "same date = skip."
+
+
+---
+
+## Update (ต.ค. 2569)
+
+- **DPD tab removed entirely** (no `PB64`, no `PR`, no DPD sheet ingestion). Ignore §3.2 and the `DPDธอส` sheet; only the 4 contract sheets feed `DB64`. There is no nav bar now—the page is the debt dashboard only.
+- ช่วงงวดค้าง: 'ค้าง 3 งวด' and 'เกิน 3 งวด' are merged into **'เกิน 2 งวด'** via `rngMap()`.
+- Latest data: `Contract_Active_Dm 2-10-69`, 18,889 rows; เดือนก่อน = เดือนนี้ in this export (comparison shows no change).
