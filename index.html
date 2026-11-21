@@ -72,7 +72,6 @@ body{font-family:var(--font);font-size:15px;background:#eef2f7;color:var(--g800)
 .fc-br{background:#059669}
 .fc-pj{background:#d97706}
 .fc-st{background:#0d9488}
-.fc-tr{background:#db2777}
 .fc-rng{background:#dc2626}
 .fc-inst{background:#4f46e5}
 .fc-trend{background:#0891b2}
@@ -189,8 +188,6 @@ td.kps{color:var(--am);font-weight:700}
     <select id="f-pj" onchange="applyF()"><option value="">ทั้งหมด</option></select>
     <label>สถานะบริหารหนี้:</label>
     <select id="f-st" onchange="applyF()"><option value="">ทั้งหมด</option></select>
-    <label>การติดตาม:</label>
-    <select id="f-tr" onchange="applyF()"><option value="">ทั้งหมด</option></select>
     <label>ช่วงงวดค้าง:</label>
     <select id="f-rng" onchange="applyF()"><option value="">ทั้งหมด</option><option>ไม่ค้าง</option><option>ค้าง 1-2 งวด</option><option>เกิน 2 งวด</option></select>
     <label>งวดค้าง:</label>
@@ -302,7 +299,6 @@ function initDF(){
   fi('f-br',[...new Set(DR.map(r=>r[D.br]).filter(v=>v&&v!==''))].sort());
   fi('f-pj',[...new Set(DR.map(r=>r[D.pj]).filter(v=>v&&v!==''))].sort());
   fi('f-st',[...new Set(DR.map(r=>r[D.sc]).filter(v=>v&&v!==''))].sort());
-  fi('f-tr',[...new Set(DR.map(r=>r[D.tc]).filter(v=>v&&v!==''))].sort());
   const maxInst=Math.max(0,...DR.map(r=>r[D.ic]||0),...DR.map(r=>r[D.ip]||0));
   const instEl=document.getElementById('f-inst');
   if(instEl){
@@ -325,7 +321,7 @@ function setView(v){
 }
 function applyF(){
   const g=id=>{const el=document.getElementById(id);return el?el.value:'';};
-  const tp=g('f-type'),dv=g('f-div'),br=g('f-br'),pj=g('f-pj'),st=g('f-st'),tr=g('f-tr'),rng=g('f-rng'),inst=g('f-inst'),kp=g('f-kpi'),trend=g('f-trend'),trendi=g('f-trendi');
+  const tp=g('f-type'),dv=g('f-div'),br=g('f-br'),pj=g('f-pj'),st=g('f-st'),rng=g('f-rng'),inst=g('f-inst'),kp=g('f-kpi'),trend=g('f-trend'),trendi=g('f-trendi');
   const vST=r=>DV==='prev'?r[D.sp]:r[D.sc];
   const vRNG=r=>rngMap(DV==='prev'?r[D.rp]:r[D.rc]);
   const vPI=r=>DV==='prev'?r[D.ip]:r[D.ic];
@@ -352,7 +348,6 @@ function applyF(){
     if(DS.rng&&vRNG(r)!==DS.rng)return false;
     if(DS.plan&&r[D.pl]!==DS.plan)return false;
     if(st&&vST(r)!==st)return false;
-    if(tr&&r[D.tc]!==tr)return false;
     if(rng&&vRNG(r)!==rng)return false;
     if(inst!==''){if(inst==='25+'){if(vPI(r)<25)return false;}else if(vPI(r)!==Number(inst))return false;}
     if(kp==='1'&&!(r[D.kc]>0))return false;
@@ -364,7 +359,7 @@ function applyF(){
   renderDebt();
 }
 function resetF(){
-  ['f-type','f-div','f-br','f-pj','f-st','f-tr','f-rng','f-inst','f-kpi','f-trend','f-trendi'].forEach(id=>{
+  ['f-type','f-div','f-br','f-pj','f-st','f-rng','f-inst','f-kpi','f-trend','f-trendi'].forEach(id=>{
     const el=document.getElementById(id);
     if(el){
       if(id==='f-br'){while(el.options.length>1)el.remove(1);[...new Set(DR.map(r=>r[D.br]).filter(v=>v&&v!==''))].sort().forEach(v=>el.add(new Option(v,v)));}
@@ -400,7 +395,6 @@ function bdg(){
   addSel('f-br','สาขา','fc-br');
   addSel('f-pj','โครงการ','fc-pj');
   addSel('f-st','สถานะบริหารหนี้','fc-st');
-  addSel('f-tr','การติดตาม','fc-tr');
   addSel('f-rng','ช่วงงวดค้าง','fc-rng');
   addSel('f-inst','งวดค้าง','fc-inst');
   addSel('f-trend','แนวโน้มหนี้ (บาท)','fc-trend');
@@ -420,7 +414,7 @@ function renderDebt(){
   const d=DF,ip=DV==='prev',ic=DV==='cmp';
   const vPD=r=>ip?r[D.pp]:r[D.pc],vKPI=r=>ip?r[D.kp]:r[D.kc];
   const vPI=r=>ip?r[D.ip]:r[D.ic],vST=r=>ip?r[D.sp]:r[D.sc];
-  const vRNG=r=>rngMap(ip?r[D.rp]:r[D.rc]),vTR=r=>ip?r[D.tp2]:r[D.tc],vDET=r=>ip?r[D.dp2]:r[D.dc];
+  const vRNG=r=>rngMap(ip?r[D.rp]:r[D.rc]),vDET=r=>ip?r[D.dp2]:r[D.dc];
   const spc=d.reduce((s,r)=>s+r[D.pc],0),spp=d.reduce((s,r)=>s+r[D.pp],0);
   const skc=d.reduce((s,r)=>s+r[D.kc],0),skp=d.reduce((s,r)=>s+r[D.kp],0);
   const pdS=ip?spp:spc,kpiS=ip?skp:skc,dp=spc-spp,dk=skc-skp;
@@ -528,8 +522,8 @@ function renderDDet(d,ip,ic){
   document.getElementById('d-cnt').textContent=` (${d.length.toLocaleString()} รายการ)`;
   const rCls={'ไม่ค้าง':'pg','ค้าง 1-2 งวด':'pb','เกิน 2 งวด':'pr'};
   let th='<tr><th>กอง</th><th>สาขา</th><th>โครงการ</th><th>ประเภท</th><th>เลขผัง</th><th>บ้านเลขที่</th>';
-  if(!ic&&!ip)th+='<th>สถานะบริหารหนี้</th><th class="r">งวดค้าง(ก่อน)</th><th>ช่วงงวดค้าง(ก่อน)</th><th class="r">หนี้ค้าง(ก่อน) บาท</th><th class="r">หนี้ตัวชี้วัด(ก่อน) บาท</th><th>การติดตาม(ก่อน)</th><th>รายละเอียด(ก่อน)</th><th class="r">งวดค้าง</th><th>ช่วงงวด</th><th class="r">หนี้ค้าง (บาท)</th><th class="r">หนี้ตัวชี้วัด (บาท)</th><th>การติดตาม</th><th>รายละเอียด</th>';
-  else if(!ic)th+='<th>สถานะบริหารหนี้</th><th class="r">งวดค้าง</th><th>ช่วงงวด</th><th class="r">หนี้ค้าง (บาท)</th><th class="r">หนี้ตัวชี้วัด (บาท)</th><th>การติดตาม</th><th>รายละเอียด</th>';
+  if(!ic&&!ip)th+='<th>สถานะบริหารหนี้</th><th class="r">งวดค้าง(ก่อน)</th><th>ช่วงงวดค้าง(ก่อน)</th><th class="r">หนี้ค้าง(ก่อน) บาท</th><th class="r">หนี้ตัวชี้วัด(ก่อน) บาท</th><th>รายละเอียด(ก่อน)</th><th class="r">งวดค้าง</th><th>ช่วงงวด</th><th class="r">หนี้ค้าง (บาท)</th><th class="r">หนี้ตัวชี้วัด (บาท)</th><th>รายละเอียด</th>';
+  else if(!ic)th+='<th>สถานะบริหารหนี้</th><th class="r">งวดค้าง</th><th>ช่วงงวด</th><th class="r">หนี้ค้าง (บาท)</th><th class="r">หนี้ตัวชี้วัด (บาท)</th><th>รายละเอียด</th>';
   else th+='<th>สถานะบริหารหนี้</th><th class="r">งวด(ก่อน)</th><th class="r">งวด(นี้)</th><th class="r">หนี้ค้าง(ก่อน) บาท</th><th class="r">หนี้ค้าง(นี้) บาท</th><th class="r">Δหนี้รวม</th><th class="r">ตัวชี้วัด(ก่อน) บาท</th><th class="r">ตัวชี้วัด(นี้) บาท</th><th class="r">Δตัวชี้วัด</th>';
   th+='</tr>';
   document.getElementById('d-th').innerHTML=th;
@@ -538,7 +532,7 @@ function renderDDet(d,ip,ic){
   const show=arr.slice(0,500);
   const rows=show.map(r=>{
     const pi=ip?r[D.ip]:r[D.ic],pd=ip?r[D.pp]:r[D.pc],kpi=ip?r[D.kp]:r[D.kc];
-    const rc2=rngMap(ip?r[D.rp]:r[D.rc]),tr2=ip?r[D.tp2]:r[D.tc],det=ip?r[D.dp2]:r[D.dc];
+    const rc2=rngMap(ip?r[D.rp]:r[D.rc]),det=ip?r[D.dp2]:r[D.dc];
     const rPl=rc2?`<span class="pl ${rCls[rc2]||'pgr'}">${rc2}</span>`:'—';
     const rcPrev=rngMap(r[D.rp]),rPlPrev=rcPrev?`<span class="pl ${rCls[rcPrev]||'pgr'}">${rcPrev}</span>`:'—';
     const scVal=r[D.sc]&&r[D.sc]!==''?r[D.sc]:'—';
@@ -546,8 +540,8 @@ function renderDDet(d,ip,ic){
     const scPl=r[D.sc]&&r[D.sc]!==''?('<span class="pl '+scCls+'">'+scVal+'</span>'):'—';
     let tds='<td>'+safe(r[D.dv])+'</td><td>'+safe(r[D.br])+'</td><td>'+safe(r[D.pj])+'</td><td>'+safe(r[D.tp])+'</td><td style="font-size:12px">'+safe(r[D.pl])+'</td><td>'+safe(r[D.hs])+'</td><td>'+scPl+'</td>';
     if(!ic){
-      if(!ip)tds+='<td class="r">'+(r[D.ip]>0?r[D.ip]:'—')+'</td><td>'+rPlPrev+'</td><td class="r">'+(r[D.pp]>0?fmt(r[D.pp]):'—')+'</td><td class="'+(r[D.kp]>0?'kvc':'kvz')+' r">'+(r[D.kp]>0?fmt(r[D.kp]):'—')+'</td><td>'+safe(r[D.tp2])+'</td><td style="max-width:130px;overflow:hidden;text-overflow:ellipsis">'+safe(r[D.dp2])+'</td>';
-      tds+='<td class="r">'+(pi>0?pi:'—')+'</td><td>'+rPl+'</td><td class="r">'+(pd>0?fmt(pd):'—')+'</td><td class="'+(kpi>0?'kvc':'kvz')+' r">'+(kpi>0?fmt(kpi):'—')+'</td><td>'+safe(tr2)+'</td><td style="max-width:130px;overflow:hidden;text-overflow:ellipsis">'+safe(det)+'</td>';
+      if(!ip)tds+='<td class="r">'+(r[D.ip]>0?r[D.ip]:'—')+'</td><td>'+rPlPrev+'</td><td class="r">'+(r[D.pp]>0?fmt(r[D.pp]):'—')+'</td><td class="'+(r[D.kp]>0?'kvc':'kvz')+' r">'+(r[D.kp]>0?fmt(r[D.kp]):'—')+'</td><td style="max-width:130px;overflow:hidden;text-overflow:ellipsis">'+safe(r[D.dp2])+'</td>';
+      tds+='<td class="r">'+(pi>0?pi:'—')+'</td><td>'+rPl+'</td><td class="r">'+(pd>0?fmt(pd):'—')+'</td><td class="'+(kpi>0?'kvc':'kvz')+' r">'+(kpi>0?fmt(kpi):'—')+'</td><td style="max-width:130px;overflow:hidden;text-overflow:ellipsis">'+safe(det)+'</td>';
     }else{
       const dp2=r[D.pc]-r[D.pp],dk2=r[D.kc]-r[D.kp];
       tds+='<td class="r">'+(r[D.ip]>0?r[D.ip]:'—')+'</td>'+'<td class="r">'+(r[D.ic]>0?r[D.ic]:'—')+'</td>'+'<td class="r">'+(r[D.pp]>0?fmt(r[D.pp]):'—')+'</td>'+'<td class="r">'+(r[D.pc]>0?fmt(r[D.pc]):'—')+'</td>'+'<td class="'+(dp2>0?'cup':dp2<0?'cdn':'')+' r">'+(dp2!==0?(dp2>0?'▲':'▼')+fmt(Math.abs(dp2)):'—')+'</td>'+'<td class="'+(r[D.kp]>0?'kvc':'kvz')+' r">'+(r[D.kp]>0?fmt(r[D.kp]):'—')+'</td>'+'<td class="'+(r[D.kc]>0?'kvc':'kvz')+' r">'+(r[D.kc]>0?fmt(r[D.kc]):'—')+'</td>'+'<td class="'+(dk2>0?'cup':dk2<0?'cdn':'')+' r">'+(dk2!==0?(dk2>0?'▲':'▼')+fmt(Math.abs(dk2)):'—')+'</td>';
@@ -563,10 +557,10 @@ function exportXL(type){
   let rows=[],name='';
   if(type==='sum'||type==='detail'){
     const ip=DV==='prev',ic=DV==='cmp';name='บริหารหนี้';
-    if(!ic&&!ip)rows=[['กอง','สาขา','โครงการ','ประเภท','เลขผัง','บ้านเลขที่','สถานะบริหารหนี้','งวดค้าง(ก่อน)','ช่วงงวดค้าง(ก่อน)','หนี้ค้าง(ก่อน)','หนี้ตัวชี้วัด(ก่อน)','การติดตาม(ก่อน)','รายละเอียด(ก่อน)','งวดค้าง','ช่วงงวด','หนี้ค้าง(บาท)','หนี้ตัวชี้วัด(บาท)','การติดตาม','รายละเอียด'],
-      ...DF.map(r=>[r[D.dv],r[D.br],r[D.pj],r[D.tp],r[D.pl],r[D.hs],r[D.sc],r[D.ip],rngMap(r[D.rp]),r[D.pp],r[D.kp],r[D.tp2],r[D.dp2],r[D.ic],rngMap(r[D.rc]),r[D.pc],r[D.kc],r[D.tc],r[D.dc]])];
-    else if(!ic)rows=[['กอง','สาขา','โครงการ','ประเภท','เลขผัง','บ้านเลขที่','สถานะบริหารหนี้','งวดค้าง','ช่วงงวด','หนี้ค้าง(บาท)','หนี้ตัวชี้วัด(บาท)','การติดตาม','รายละเอียด'],
-      ...DF.map(r=>[r[D.dv],r[D.br],r[D.pj],r[D.tp],r[D.pl],r[D.hs],r[D.sc],r[D.ip],rngMap(r[D.rp]),r[D.pp],r[D.kp],r[D.tp2],r[D.dp2]])];
+    if(!ic&&!ip)rows=[['กอง','สาขา','โครงการ','ประเภท','เลขผัง','บ้านเลขที่','สถานะบริหารหนี้','งวดค้าง(ก่อน)','ช่วงงวดค้าง(ก่อน)','หนี้ค้าง(ก่อน)','หนี้ตัวชี้วัด(ก่อน)','รายละเอียด(ก่อน)','งวดค้าง','ช่วงงวด','หนี้ค้าง(บาท)','หนี้ตัวชี้วัด(บาท)','รายละเอียด'],
+      ...DF.map(r=>[r[D.dv],r[D.br],r[D.pj],r[D.tp],r[D.pl],r[D.hs],r[D.sc],r[D.ip],rngMap(r[D.rp]),r[D.pp],r[D.kp],r[D.dp2],r[D.ic],rngMap(r[D.rc]),r[D.pc],r[D.kc],r[D.dc]])];
+    else if(!ic)rows=[['กอง','สาขา','โครงการ','ประเภท','เลขผัง','บ้านเลขที่','สถานะบริหารหนี้','งวดค้าง','ช่วงงวด','หนี้ค้าง(บาท)','หนี้ตัวชี้วัด(บาท)','รายละเอียด'],
+      ...DF.map(r=>[r[D.dv],r[D.br],r[D.pj],r[D.tp],r[D.pl],r[D.hs],r[D.sc],r[D.ip],rngMap(r[D.rp]),r[D.pp],r[D.kp],r[D.dp2]])];
     else rows=[['กอง','สาขา','โครงการ','ประเภท','เลขผัง','บ้านเลขที่','สถานะบริหารหนี้','งวด(ก่อน)','งวด(นี้)','หนี้ค้าง(ก่อน)','หนี้ค้าง(นี้)','Δหนี้รวม','ตัวชี้วัด(ก่อน)','ตัวชี้วัด(นี้)','Δตัวชี้วัด'],
       ...DF.map(r=>[r[D.dv],r[D.br],r[D.pj],r[D.tp],r[D.pl],r[D.hs],r[D.sc],r[D.ip],r[D.ic],r[D.pp],r[D.pc],r[D.pc]-r[D.pp],r[D.kp],r[D.kc],r[D.kc]-r[D.kp]])];
   }
