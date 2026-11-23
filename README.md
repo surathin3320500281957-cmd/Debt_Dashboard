@@ -19,7 +19,12 @@ One page only (บริหารหนี้ตามสัญญา) over 4 co
 detail table, Excel/PDF export.
 
 View modes (`DV`): **เดือนนี้** (`curr`), **เดือนก่อน** (`prev`),
-**เปรียบเทียบ** (`cmp`).
+**เปรียบเทียบ** (`cmp`). Each month shows its own contracts (rows are the
+*union* of both months, field 20 `ch` = `B` both / `N` new this month /
+`X` closed = prev only; `applyF()` hides `X` in curr and `N` in prev).
+Only in cmp: filter `f-ch` (การเปลี่ยนแปลงสัญญา), 3 clickable summary cards
+(`#d-chg`, `setCh()`), and a table/export column. New = ทำสัญญาใหม่,
+X = ปิดสัญญา (confirmed by the user).
 
 **Removed on request (do not re-add unless asked):**
 - DPD ธอส. tab (no `PB64`, no `PR`, no nav bar, no DPD sheet).
@@ -56,9 +61,10 @@ until Nov 2569; it is obsolete.)
 
 ### 3.1 Field mapping → one row of `DR` (20 fields)
 
-Rows = rows of sheet `เดือนนี้`. Join to `เดือนก่อน` by `CUST_CODE`
-(unique in every sheet). Contracts absent from `เดือนก่อน` get prev values
-0 / '' (so prev view only counts contracts still present this month).
+Rows = **union** of `เดือนนี้` and `เดือนก่อน`, joined by `CUST_CODE`
+(unique in every sheet). Missing side gets 0 / '' and `ch` flag (field 20:
+`B`/`N`/`X`). Current view = B+N, prev view = B+X, so each month's totals
+match its own sheet.
 
 | idx | key (`D.`) | source |
 |---|---|---|
@@ -74,6 +80,7 @@ Rows = rows of sheet `เดือนนี้`. Join to `เดือนก่�
 | 12 / 13 | `pc` / `pp` หนี้ค้างรวม | `ALL_PRICE` (rounded to whole baht) |
 | 14 / 15 | `kc` / `kp` หนี้ตัวชี้วัด | **rule below** |
 | 16–19 | unused | 'ยังไม่ติดตาม','ยังไม่ติดตาม','','' |
+| 20 | `ch` | `B` both months, `N` only this month, `X` only previous month |
 
 **หนี้ตัวชี้วัด rule (confirmed by the user):**
 `CUST_CODE` found in sheet `ฟ้องปีก่อน` → 0 (still counted in หนี้ค้างรวม);
@@ -114,8 +121,9 @@ file/CREATE_DATE. Decoder in the page: `dcmp()` using `DecompressionStream('gzip
 5. Never assume "same date = same content" — always diff.
 6. Playwright render test (below). Known harmless console error: Google Fonts blocked offline.
 
-Reference result (Nov 2569 file): หนี้ค้างรวม 62,058,482 / ก่อน 59,475,911;
-หนี้ตัวชี้วัด 2,556,493 / ก่อน 2,031,259; 871 sued-last-year rows zeroed;
+Reference result (Nov 2569 file): 18,931 rows = 18,780 B + 42 N + 109 X;
+หนี้ค้างรวม 62,058,482 / ก่อน 60,064,204;
+หนี้ตัวชี้วัด 2,556,493 / ก่อน 2,084,703; 871 sued-last-year rows zeroed;
 626 rows with indicator debt.
 
 ### 3.4 Render test
@@ -144,8 +152,8 @@ dashboard) was deliberately left unchanged.
 ## 5. Filter system
 
 - **Dropdowns**: `f-type, f-div, f-br, f-pj, f-st, f-rng, f-inst, f-kpi`
-  plus `f-trend` (debt amount `pc-pp`) and `f-trendi` (installments
-  `ic-ip`), the last two visible only in เปรียบเทียบ. Read in `applyF()`.
+  plus `f-trend` (debt amount `pc-pp`), `f-trendi` (installments
+  `ic-ip`) and `f-ch` (contract change), the last three visible only in เปรียบเทียบ. Read in `applyF()`.
 - **Click-drill** `DS` (`st, br, pj, rng, plan`) from charts; ANDed with dropdowns.
 - `f-inst`: ไม่ค้าง(0), 1..24, `25+` (cap at 24 — long tail up to 254).
 - **Badges**: `bdg()` renders a colored dismissible chip per active filter
@@ -153,7 +161,7 @@ dashboard) was deliberately left unchanged.
   clears one; `resetF()` clears all.
 
 Detail table: เดือนนี้ 17 columns (incl. 5 "(ก่อน)" columns after สถานะ),
-เดือนก่อน 12, เปรียบเทียบ 15; the Excel export has the same columns.
+เดือนก่อน 12, เปรียบเทียบ 16 (last = การเปลี่ยนแปลงสัญญา); the Excel export has the same columns.
 "รายละเอียด" column exists but is empty (the new file has no such column).
 
 ---

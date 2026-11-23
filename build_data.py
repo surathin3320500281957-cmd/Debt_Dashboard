@@ -18,14 +18,23 @@ def rng(n): return 'ไม่ค้าง' if n<=0 else 'ค้าง 1-2 งว
 def ind(r): return 0.0 if S(r['CUST_CODE']) in sued else round(sum(num(r[m]) for m in M),2)
 assert set(c.CONTRACT_TYPE_CODE)<=set(TP) and set(p.CONTRACT_TYPE_CODE)<=set(TP)
 pd_={S(r['CUST_CODE']):r for _,r in p.iterrows()}
-DR=[];miss=0
-for _,r in c.iterrows():
-    k=S(r['CUST_CODE']);q=pd_.get(k)
-    j=pr.loc[r['PROJ']];per=int(num(r['PERIOD']));pp_=int(num(q['PERIOD'])) if q is not None else 0
-    DR.append([TP[r['CONTRACT_TYPE_CODE']],S(j['กอง']),S(j['สำนักงาน']),S(r['PROJ_NAME']),S(r['HOUSE_NO_STD']).lstrip('0'),S(r['HOUSE_NO_ACT']),S(r['DM_STATUS_NAME']),S(q['DM_STATUS_NAME']) if q is not None else '',
-      rng(per),(rng(pp_) if q is not None else ''),per,pp_,round(num(r['ALL_PRICE'])),round(num(q['ALL_PRICE'])) if q is not None else 0,round(ind(r)),round(ind(q)) if q is not None else 0,'ยังไม่ติดตาม','ยังไม่ติดตาม','',''])
+cd_={S(r['CUST_CODE']):r for _,r in c.iterrows()}
+def row(r,q,ch):
+    """r = this-month row or None, q = previous-month row or None; ch: B both, N new (this month only), X closed (prev only)"""
+    base=r if r is not None else q
+    j=pr.loc[base['PROJ']]
+    per=int(num(r['PERIOD'])) if r is not None else 0
+    pp_=int(num(q['PERIOD'])) if q is not None else 0
+    return [TP[base['CONTRACT_TYPE_CODE']],S(j['กอง']),S(j['สำนักงาน']),S(base['PROJ_NAME']),S(base['HOUSE_NO_STD']).lstrip('0'),S(base['HOUSE_NO_ACT']),
+      S(r['DM_STATUS_NAME']) if r is not None else '',S(q['DM_STATUS_NAME']) if q is not None else '',
+      rng(per) if r is not None else '',rng(pp_) if q is not None else '',per,pp_,
+      round(num(r['ALL_PRICE'])) if r is not None else 0,round(num(q['ALL_PRICE'])) if q is not None else 0,
+      round(ind(r)) if r is not None else 0,round(ind(q)) if q is not None else 0,'ยังไม่ติดตาม','ยังไม่ติดตาม','','',ch]
+DR=[row(r,pd_.get(S(r['CUST_CODE'])),'B' if S(r['CUST_CODE']) in pd_ else 'N') for _,r in c.iterrows()]
+DR+=[row(None,q,'X') for k,q in pd_.items() if k not in cd_]
 json.dump(DR,open('DR_new.json','w'),ensure_ascii=False)
-print('rows',len(DR),'curr rows',len(c),'ALL curr',round(sum(r[12] for r in DR),2),c.ALL_PRICE.sum(),'| prev-in-curr ALL',round(sum(r[13] for r in DR),2),'prev sheet',p.ALL_PRICE.sum())
-print('ind curr',round(sum(r[14] for r in DR),2),'ind prev(of curr rows)',round(sum(r[15] for r in DR),2),'prev sheet full',round(sum(ind(r) for _,r in p.iterrows()),2))
-print('ind curr no-rule',round(c[M].fillna(0).sum().sum(),2),'sued rows w/ indicator zeroed',sum(1 for r in c.itertuples() if r.CUST_CODE in sued))
-print(collections.Counter(r[0] for r in DR),collections.Counter(r[1] for r in DR))
+cnt=collections.Counter(r[20] for r in DR)
+print('rows',len(DR),dict(cnt),'curr view',cnt['B']+cnt['N'],'prev view',cnt['B']+cnt['X'])
+print('ALL curr',sum(r[12] for r in DR),'sheet',round(c.ALL_PRICE.sum()),'| ALL prev',sum(r[13] for r in DR),'sheet',round(p.ALL_PRICE.sum()))
+print('ind curr',sum(r[14] for r in DR),'prev',sum(r[15] for r in DR),'prev sheet by rule',round(sum(ind(r) for _,r in p.iterrows())))
+print('X rows debt',sum(r[13] for r in DR if r[20]=='X'),'N rows debt',sum(r[12] for r in DR if r[20]=='N'))
