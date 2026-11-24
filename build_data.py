@@ -29,7 +29,7 @@ def row(r,q,ch):
       S(r['DM_STATUS_NAME']) if r is not None else '',S(q['DM_STATUS_NAME']) if q is not None else '',
       rng(per) if r is not None else '',rng(pp_) if q is not None else '',per,pp_,
       round(num(r['ALL_PRICE'])) if r is not None else 0,round(num(q['ALL_PRICE'])) if q is not None else 0,
-      round(ind(r)) if r is not None else 0,round(ind(q)) if q is not None else 0,'ยังไม่ติดตาม','ยังไม่ติดตาม','','',ch]
+      round(ind(r)) if r is not None else 0,round(ind(q)) if q is not None else 0,'ยังไม่ติดตาม','ยังไม่ติดตาม','','',ch,S(base['CUST_CODE'])]
 DR=[row(r,pd_.get(S(r['CUST_CODE'])),'B' if S(r['CUST_CODE']) in pd_ else 'N') for _,r in c.iterrows()]
 DR+=[row(None,q,'X') for k,q in pd_.items() if k not in cd_]
 json.dump(DR,open('DR_new.json','w'),ensure_ascii=False)

@@ -59,7 +59,7 @@ Source file name looks like `...Dashboard.xlsx`, sheets:
 (An old format with 4 contract sheets + header-row totals + `DPDธอส` existed
 until Nov 2569; it is obsolete.)
 
-### 3.1 Field mapping → one row of `DR` (20 fields)
+### 3.1 Field mapping → one row of `DR` (22 fields)
 
 Rows = **union** of `เดือนนี้` and `เดือนก่อน`, joined by `CUST_CODE`
 (unique in every sheet). Missing side gets 0 / '' and `ch` flag (field 20:
@@ -81,6 +81,7 @@ match its own sheet.
 | 14 / 15 | `kc` / `kp` หนี้ตัวชี้วัด | **rule below** |
 | 16–19 | unused | 'ยังไม่ติดตาม','ยังไม่ติดตาม','','' |
 | 20 | `ch` | `B` both months, `N` only this month, `X` only previous month |
+| 21 | `cc` | `CUST_CODE` (รหัสลูกหนี้), shown after บ้านเลขที่ in the table and exports |
 
 **หนี้ตัวชี้วัด rule (confirmed by the user):**
 `CUST_CODE` found in sheet `ฟ้องปีก่อน` → 0 (still counted in หนี้ค้างรวม);
@@ -160,8 +161,8 @@ dashboard) was deliberately left unchanged.
   into `#d-bdg` (`.fchip` + `.fc-*` classes); `clrF(id)` / `clrF('ds:key')`
   clears one; `resetF()` clears all.
 
-Detail table: เดือนนี้ 17 columns (incl. 5 "(ก่อน)" columns after สถานะ),
-เดือนก่อน 12, เปรียบเทียบ 16 (last = การเปลี่ยนแปลงสัญญา); the Excel export has the same columns.
+Detail table: เดือนนี้ 18 columns (incl. 5 "(ก่อน)" columns after สถานะ),
+เดือนก่อน 13, เปรียบเทียบ 17 (last = การเปลี่ยนแปลงสัญญา); the Excel export has the same columns.
 "รายละเอียด" column exists but is empty (the new file has no such column).
 
 ---
