@@ -25,7 +25,7 @@ View modes (`DV`): **เดือนนี้** (`curr`), **เดือนก�
 Only in cmp: filter `f-ch` (การเปลี่ยนแปลงสัญญา), 3 clickable summary cards
 (`#d-chg`, `setCh()`), and a table/export column.
 Also only in cmp: filter `f-sc` (เปลี่ยนแปลงสถานะบริหารหนี้: เปลี่ยนสถานะ / ไม่เปลี่ยนสถานะ,
-compares `sc` vs `sp`, applies to `B` rows only — new/closed contracts are excluded from both
+compares `sc` vs `sp`, plus one option per observed transition `สถานะก่อน → สถานะนี้ (n)` (value `t:<i>`, list `TRL` built in `initDF()`), applies to `B` rows only — new/closed contracts are excluded from both
 options), 2 clickable cards (`#d-chs`, `setSc()`), and the column สถานะบริหารหนี้(ก่อน)
 before สถานะบริหารหนี้ (table + export). `applyF()` uses `pass(r,skip)` so each card set ignores its own filter. New = ทำสัญญาใหม่,
 X = ปิดสัญญา (confirmed by the user).

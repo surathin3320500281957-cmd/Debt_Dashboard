@@ -304,7 +304,12 @@ function mkC(id,type,data,opts){
 }
 
 // ===== DEBT =====
+let TRL=[];
 function initDF(){
+  {const m={};DR.forEach(r=>{if(r[D.ch]==='B'&&r[D.sc]!==r[D.sp]){const k=r[D.sp]+'\u0001'+r[D.sc];m[k]=(m[k]||0)+1;}});
+   TRL=Object.keys(m).sort((a,b)=>m[b]-m[a]||(a<b?-1:1)).map(k=>({sp:k.split('\u0001')[0],sc:k.split('\u0001')[1],n:m[k]}));
+   const sel=document.getElementById('f-sc');
+   if(sel){const og=document.createElement('optgroup');og.label='ย้ายสถานะ (ก่อน → นี้)';TRL.forEach((t,i)=>og.appendChild(new Option(t.sp+' → '+t.sc+' ('+t.n.toLocaleString()+')','t:'+i)));sel.appendChild(og);}}
   const fi=(id,arr)=>{const el=document.getElementById(id);if(el)arr.forEach(v=>el.add(new Option(v,v)));};
   fi('f-div',[...new Set(DR.map(r=>r[D.dv]).filter(v=>v&&v!==''))].sort());
   fi('f-br',[...new Set(DR.map(r=>r[D.br]).filter(v=>v&&v!==''))].sort());
@@ -359,7 +364,7 @@ function applyF(){
     if(DV==='curr'&&r[D.ch]==='X')return false;
     if(DV==='prev'&&r[D.ch]==='N')return false;
     if(skip!=='ch'&&chv&&r[D.ch]!==chv)return false;
-    if(skip!=='sc'&&scv){if(r[D.ch]!=='B')return false;const cg=r[D.sc]!==r[D.sp];if(scv==='chg'&&!cg)return false;if(scv==='same'&&cg)return false;}
+    if(skip!=='sc'&&scv){if(r[D.ch]!=='B')return false;const cg=r[D.sc]!==r[D.sp];if(scv==='chg'&&!cg)return false;if(scv==='same'&&cg)return false;if(scv.indexOf('t:')===0){const t=TRL[+scv.slice(2)];if(!t||r[D.sp]!==t.sp||r[D.sc]!==t.sc)return false;}}
     if(tp&&r[D.tp]!==tp)return false;
     if(dv&&r[D.dv]!==dv)return false;
     if(br&&r[D.br]!==br)return false;
@@ -414,7 +419,7 @@ function bdg(){
     if(el&&el.value!==''&&el.offsetParent!==null){
       const opt=el.options[el.selectedIndex];
       const txt=opt?opt.text:el.value;
-      chips.push({label:label+': '+cl(txt,20),clear:id,cls:cls});
+      chips.push({label:label+': '+cl(txt,id==='f-sc'?60:20),clear:id,cls:cls});
     }
   };
   addSel('f-type','ประเภท','fc-type');
@@ -469,7 +474,7 @@ function renderDebt(){
   const chsEl=document.getElementById('d-chs');
   if(chsEl){
     if(ic){
-      const ssel=(document.getElementById('f-sc')||{}).value||'';
+      const ssel0=(document.getElementById('f-sc')||{}).value||'';const ssel=ssel0.indexOf('t:')===0?'chg':ssel0;
       const sg={chg:{n:0,pc:0},same:{n:0,pc:0}};
       DFs.forEach(r=>{if(r[D.ch]!=='B')return;const k=r[D.sc]!==r[D.sp]?'chg':'same';sg[k].n++;sg[k].pc+=r[D.pc];});
       const scard=(k,cls,t)=>`<div class="kc ${cls}${ssel===k?' on':''}" onclick="setSc('${k}')" title="กดเพื่อกรอง / กดอีกครั้งเพื่อล้าง"><div class="kl">${t}</div><div class="kv">${sg[k].n.toLocaleString()}</div><div class="ks">ราย · หนี้ค้างรวม (นี้) ${fmt(sg[k].pc)} บาท</div></div>`;
@@ -589,7 +594,7 @@ function renderDDet(d,ip,ic){
     const rc2=rngMap(ip?r[D.rp]:r[D.rc]),det=ip?r[D.dp2]:r[D.dc];
     const rPl=rc2?`<span class="pl ${rCls[rc2]||'pgr'}">${rc2}</span>`:'—';
     const rcPrev=rngMap(r[D.rp]),rPlPrev=rcPrev?`<span class="pl ${rCls[rcPrev]||'pgr'}">${rcPrev}</span>`:'—';
-    const sv=ip?r[D.sp]:(r[D.sc]&&r[D.sc]!=='ไม่มีสถานะ'?r[D.sc]:(ic?r[D.sp]:r[D.sc]));
+    const sv=ip?r[D.sp]:(ic&&r[D.ch]==='X'?'':r[D.sc]);
     const scVal=sv&&sv!==''?sv:'—';
     const scCls=sv&&sv!==''?(sv.includes('ฟ้อง')?'pt':sv.includes('บอกเลิก')||sv.includes('พิจารณา')?'pa':sv.includes('ทวง')||sv.includes('ติดตาม')?'pb':'pgr'):'pgr';
     const scPl=sv&&sv!==''?('<span class="pl '+scCls+'">'+scVal+'</span>'):'—';
@@ -621,7 +626,7 @@ function exportXL(type){
     else if(!ic)rows=[['กอง','สาขา','โครงการ','ประเภท','เลขผัง','บ้านเลขที่','รหัสลูกหนี้','สถานะบริหารหนี้','งวดค้าง','ช่วงงวด','หนี้ค้าง(บาท)','หนี้ตัวชี้วัด(บาท)','รายละเอียด'],
       ...DF.map(r=>[r[D.dv],r[D.br],r[D.pj],r[D.tp],r[D.pl],r[D.hs],r[D.cc],r[D.sp],r[D.ip],rngMap(r[D.rp]),r[D.pp],r[D.kp],r[D.dp2]])];
     else rows=[['กอง','สาขา','โครงการ','ประเภท','เลขผัง','บ้านเลขที่','รหัสลูกหนี้','สถานะบริหารหนี้(ก่อน)','สถานะบริหารหนี้','งวด(ก่อน)','งวด(นี้)','หนี้ค้าง(ก่อน)','หนี้ค้าง(นี้)','Δหนี้รวม','ตัวชี้วัด(ก่อน)','ตัวชี้วัด(นี้)','Δตัวชี้วัด','การเปลี่ยนแปลงสัญญา'],
-      ...DF.map(r=>[r[D.dv],r[D.br],r[D.pj],r[D.tp],r[D.pl],r[D.hs],r[D.cc],(r[D.ch]==='N'?'':r[D.sp]),(r[D.ch]==='X'?r[D.sp]:r[D.sc]),r[D.ip],r[D.ic],r[D.pp],r[D.pc],r[D.pc]-r[D.pp],r[D.kp],r[D.kc],r[D.kc]-r[D.kp],r[D.ch]==='N'?'ทำสัญญาใหม่':r[D.ch]==='X'?'ปิดสัญญา':'อยู่ทั้งสองเดือน'])];
+      ...DF.map(r=>[r[D.dv],r[D.br],r[D.pj],r[D.tp],r[D.pl],r[D.hs],r[D.cc],(r[D.ch]==='N'?'':r[D.sp]),(r[D.ch]==='X'?'':r[D.sc]),r[D.ip],r[D.ic],r[D.pp],r[D.pc],r[D.pc]-r[D.pp],r[D.kp],r[D.kc],r[D.kc]-r[D.kp],r[D.ch]==='N'?'ทำสัญญาใหม่':r[D.ch]==='X'?'ปิดสัญญา':'อยู่ทั้งสองเดือน'])];
   }
   if(!rows.length)return;
   const ws=XLSX.utils.aoa_to_sheet(rows),wb=XLSX.utils.book_new();
