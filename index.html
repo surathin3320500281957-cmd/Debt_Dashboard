@@ -79,6 +79,15 @@ body{font-family:var(--font);font-size:15px;background:#eef2f7;color:var(--g800)
 .fc-kpi{background:#a16207}
 .fc-ch{background:#e11d48}
 .fc-sc{background:#0369a1}
+.trz{background:#fff;border-radius:14px;padding:14px 16px;margin:0 0 14px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.trz-h{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:10px;font-weight:700;font-size:16px}
+.trz-h small{font-weight:400;color:var(--g400);font-size:13px}
+.trz-h button{border:1px solid #cbd5e1;background:#f8fafc;border-radius:999px;padding:6px 14px;font:inherit;font-size:14px;cursor:pointer}
+.trz-b{display:flex;flex-wrap:wrap;gap:8px}
+.trc{border:2px solid #bae6fd;background:#f0f9ff;color:#0c4a6e;border-radius:999px;padding:7px 14px;font:inherit;font-size:15px;cursor:pointer;display:inline-flex;gap:8px;align-items:center}
+.trc b{background:#0369a1;color:#fff;border-radius:999px;padding:1px 9px;font-size:14px}
+.trc.on{background:#0369a1;color:#fff;border-color:#0369a1}.trc.on b{background:#fff;color:#0369a1}
+.trc.z{opacity:.4}
 .chg{margin-top:-4px}
 .chg .kc{cursor:pointer}.chg .kc.on{outline:3px solid #1f1b2d}
 .pl.pn{background:#dcfce7;color:#166534}.pl.px{background:#fee2e2;color:#991b1b}
@@ -203,8 +212,6 @@ td.kps{color:var(--am);font-weight:700}
     <select id="f-trendi" onchange="applyF()" style="display:none"><option value="">ทั้งหมด</option><option value="up">เพิ่มขึ้น</option><option value="down">ลดลง</option><option value="same">เท่าเดิม</option></select>
     <label id="lbl-ch" style="display:none">การเปลี่ยนแปลงสัญญา:</label>
     <select id="f-ch" onchange="applyF()" style="display:none"><option value="">ทั้งหมด</option><option value="B">อยู่ทั้งสองเดือน</option><option value="N">ทำสัญญาใหม่</option><option value="X">ปิดสัญญา (หลุดออก)</option></select>
-    <label id="lbl-sc" style="display:none">เปลี่ยนแปลงสถานะบริหารหนี้:</label>
-    <select id="f-sc" onchange="applyF()" style="display:none"><option value="">ทั้งหมด</option><option value="chg">เปลี่ยนสถานะ</option><option value="same">ไม่เปลี่ยนสถานะ</option></select>
     <label>ตัวชี้วัด:</label>
     <select id="f-kpi" onchange="applyF()"><option value="">ทั้งหมด</option><option value="1">มีหนี้ตัวชี้วัด</option><option value="0">ไม่มี</option></select>
     <button class="btn" onclick="resetF()">&#10006; ล้าง</button>
@@ -213,6 +220,7 @@ td.kps{color:var(--am);font-weight:700}
   <div class="kg" id="d-kpi"></div>
   <div class="kg chg" id="d-chg" style="display:none"></div>
   <div class="kg chg" id="d-chs" style="display:none"></div>
+  <div class="trz" id="d-trz" style="display:none"></div>
   <div class="knote"><span style="font-size:15px">&#128204;</span><span><strong>หนี้ตัวชี้วัด</strong> หมายถึง หนี้อายุเกิน 3 งวด <em>รวม</em>หนี้ที่ฟ้องในปีงบประมาณปัจจุบัน — ยิ่งน้อยยิ่งดี</span></div>
   <div class="g4">
     <div class="cc"><div class="ct">สถานะบริหารหนี้</div><div class="cs">สัดส่วนตามสถานะ</div><div class="leg" id="pie-leg"></div><div style="position:relative;height:145px"><canvas id="ch-pie"></canvas></div></div>
@@ -304,12 +312,11 @@ function mkC(id,type,data,opts){
 }
 
 // ===== DEBT =====
-let TRL=[];
+let TRL=[],SCM='',TRS=new Set(),TRX=false;
 function initDF(){
   {const m={};DR.forEach(r=>{if(r[D.ch]==='B'&&r[D.sc]!==r[D.sp]){const k=r[D.sp]+'\u0001'+r[D.sc];m[k]=(m[k]||0)+1;}});
    TRL=Object.keys(m).sort((a,b)=>m[b]-m[a]||(a<b?-1:1)).map(k=>({sp:k.split('\u0001')[0],sc:k.split('\u0001')[1],n:m[k]}));
-   const sel=document.getElementById('f-sc');
-   if(sel){const og=document.createElement('optgroup');og.label='ย้ายสถานะ (ก่อน → นี้)';TRL.forEach((t,i)=>og.appendChild(new Option(t.sp+' → '+t.sc+' ('+t.n.toLocaleString()+')','t:'+i)));sel.appendChild(og);}}
+  }
   const fi=(id,arr)=>{const el=document.getElementById(id);if(el)arr.forEach(v=>el.add(new Option(v,v)));};
   fi('f-div',[...new Set(DR.map(r=>r[D.dv]).filter(v=>v&&v!==''))].sort());
   fi('f-br',[...new Set(DR.map(r=>r[D.br]).filter(v=>v&&v!==''))].sort());
@@ -336,9 +343,7 @@ function setView(v){
   const lch=document.getElementById('lbl-ch'),fch=document.getElementById('f-ch');
   if(lch)lch.style.display=isCmp?'':'none';
   if(fch){fch.style.display=isCmp?'':'none';if(!isCmp)fch.value='';}
-  const lsc=document.getElementById('lbl-sc'),fsc=document.getElementById('f-sc');
-  if(lsc)lsc.style.display=isCmp?'':'none';
-  if(fsc){fsc.style.display=isCmp?'':'none';if(!isCmp)fsc.value='';}
+  if(!isCmp){SCM='';TRS=new Set();}
   applyF();
 }
 function applyF(){
@@ -359,12 +364,12 @@ function applyF(){
       else if(DS.br&&!fb.includes(DS.br))DS.br='';
     }
   }
-  const chv=g('f-ch'),scv=g('f-sc');
+  const chv=g('f-ch');
   const pass=(r,skip)=>{
     if(DV==='curr'&&r[D.ch]==='X')return false;
     if(DV==='prev'&&r[D.ch]==='N')return false;
     if(skip!=='ch'&&chv&&r[D.ch]!==chv)return false;
-    if(skip!=='sc'&&scv){if(r[D.ch]!=='B')return false;const cg=r[D.sc]!==r[D.sp];if(scv==='chg'&&!cg)return false;if(scv==='same'&&cg)return false;if(scv.indexOf('t:')===0){const t=TRL[+scv.slice(2)];if(!t||r[D.sp]!==t.sp||r[D.sc]!==t.sc)return false;}}
+    if(skip!=='sc'&&(SCM||TRS.size)){if(r[D.ch]!=='B')return false;const cg=r[D.sc]!==r[D.sp];if(SCM==='chg'&&!cg)return false;if(SCM==='same'&&cg)return false;if(TRS.size){let ok=false;for(const i of TRS){const t=TRL[i];if(t&&r[D.sp]===t.sp&&r[D.sc]===t.sc){ok=true;break;}}if(!ok)return false;}}
     if(tp&&r[D.tp]!==tp)return false;
     if(dv&&r[D.dv]!==dv)return false;
     if(br&&r[D.br]!==br)return false;
@@ -389,14 +394,14 @@ function applyF(){
   renderDebt();
 }
 function resetF(){
-  ['f-type','f-div','f-br','f-pj','f-st','f-rng','f-inst','f-kpi','f-trend','f-trendi','f-ch','f-sc'].forEach(id=>{
+  ['f-type','f-div','f-br','f-pj','f-st','f-rng','f-inst','f-kpi','f-trend','f-trendi','f-ch'].forEach(id=>{
     const el=document.getElementById(id);
     if(el){
       if(id==='f-br'){while(el.options.length>1)el.remove(1);[...new Set(DR.map(r=>r[D.br]).filter(v=>v&&v!==''))].sort().forEach(v=>el.add(new Option(v,v)));}
       el.value='';
     }
   });
-  DS={st:'',br:'',pj:'',rng:'',plan:''};applyF();
+  DS={st:'',br:'',pj:'',rng:'',plan:''};SCM='';TRS=new Set();applyF();
 }
 function toggleSK(){
   sortKPI=!sortKPI;
@@ -404,9 +409,15 @@ function toggleSK(){
   if(btn){btn.innerHTML=sortKPI?'&#9650; เรียง KPI':'&#9660; เรียง KPI';btn.style.background=sortKPI?'#fff8e6':'#fff3dc';btn.style.borderColor=sortKPI?'#b86e00':'#f0c060';}
   renderDDet(DF,DV==='prev',DV==='cmp');
 }
-function setSc(k){const el=document.getElementById('f-sc');if(!el)return;el.value=(el.value===k?'':k);applyF();}
+function setSc(k){SCM=(SCM===k?'':k);TRS=new Set();applyF();}
+function togTr(i){if(TRS.has(i))TRS.delete(i);else{TRS.add(i);SCM='';}applyF();}
+function allTr(){TRS=new Set(TRL.map((_,i)=>i));SCM='';applyF();}
+function clrTr(){TRS=new Set();applyF();}
+function expTr(){TRX=!TRX;renderDebt();}
 function setCh(k){const el=document.getElementById('f-ch');if(!el)return;el.value=(el.value===k?'':k);applyF();}
 function clrF(kind){
+  if(kind==='scm'){SCM='';applyF();return;}
+  if(kind==='trz'){TRS=new Set();applyF();return;}
   if(kind.indexOf('ds:')===0){DS[kind.slice(3)]='';applyF();return;}
   const el=document.getElementById(kind);
   if(el)el.value='';
@@ -432,7 +443,8 @@ function bdg(){
   addSel('f-trend','แนวโน้มหนี้ (บาท)','fc-trend');
   addSel('f-trendi','แนวโน้มงวดค้าง','fc-trendi');
   addSel('f-ch','การเปลี่ยนแปลงสัญญา','fc-ch');
-  addSel('f-sc','เปลี่ยนแปลงสถานะบริหารหนี้','fc-sc');
+  if(SCM)chips.push({label:'เปลี่ยนแปลงสถานะบริหารหนี้: '+(SCM==='chg'?'เปลี่ยนสถานะ':'ไม่เปลี่ยนสถานะ'),clear:'scm',cls:'fc-sc'});
+  if(TRS.size){const t1=TRS.size===1?TRL[[...TRS][0]]:null;chips.push({label:'ย้ายสถานะ: '+(t1?t1.sp+' → '+t1.sc:TRS.size+' คู่'),clear:'trz',cls:'fc-sc'});}
   addSel('f-kpi','ตัวชี้วัด','fc-kpi');
   if(DS.st)chips.push({label:'สถานะ (คลิก): '+cl(DS.st,14),clear:'ds:st',cls:'fc-ds'});
   if(DS.br)chips.push({label:'สาขา (คลิก): '+DS.br,clear:'ds:br',cls:'fc-ds'});
@@ -474,13 +486,28 @@ function renderDebt(){
   const chsEl=document.getElementById('d-chs');
   if(chsEl){
     if(ic){
-      const ssel0=(document.getElementById('f-sc')||{}).value||'';const ssel=ssel0.indexOf('t:')===0?'chg':ssel0;
+      const ssel=SCM||(TRS.size?'chg':'');
       const sg={chg:{n:0,pc:0},same:{n:0,pc:0}};
       DFs.forEach(r=>{if(r[D.ch]!=='B')return;const k=r[D.sc]!==r[D.sp]?'chg':'same';sg[k].n++;sg[k].pc+=r[D.pc];});
       const scard=(k,cls,t)=>`<div class="kc ${cls}${ssel===k?' on':''}" onclick="setSc('${k}')" title="กดเพื่อกรอง / กดอีกครั้งเพื่อล้าง"><div class="kl">${t}</div><div class="kv">${sg[k].n.toLocaleString()}</div><div class="ks">ราย · หนี้ค้างรวม (นี้) ${fmt(sg[k].pc)} บาท</div></div>`;
       chsEl.innerHTML=scard('chg','am','เปลี่ยนสถานะบริหารหนี้')+scard('same','bl','ไม่เปลี่ยนสถานะบริหารหนี้');
       chsEl.style.display='';
     }else{chsEl.style.display='none';chsEl.innerHTML='';}
+  }
+
+  const trzEl=document.getElementById('d-trz');
+  if(trzEl){
+    if(ic){
+      const cnt=TRL.map(()=>0);
+      const idx={};TRL.forEach((t,i)=>{idx[t.sp+'\u0001'+t.sc]=i;});
+      DFs.forEach(r=>{if(r[D.ch]==='B'&&r[D.sc]!==r[D.sp]){const i=idx[r[D.sp]+'\u0001'+r[D.sc]];if(i!==undefined)cnt[i]++;}});
+      const LIM=12;
+      const show=TRL.map((_,i)=>i).filter((i,k)=>TRX||k<LIM||TRS.has(i));
+      const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+      trzEl.innerHTML=`<div class="trz-h">ย้ายสถานะบริหารหนี้ (ก่อน → นี้) <small>เลือกได้หลายคู่ · ${TRL.length} คู่</small><button onclick="allTr()">เลือกทั้งหมด</button><button onclick="clrTr()">ล้างที่เลือก${TRS.size?' ('+TRS.size+')':''}</button>${TRL.length>LIM?`<button onclick="expTr()">${TRX?'ย่อ':'ดูทั้งหมด ('+TRL.length+')'}</button>`:''}</div><div class="trz-b">`+
+        show.map(i=>`<button class="trc${TRS.has(i)?' on':''}${cnt[i]===0&&!TRS.has(i)?' z':''}" onclick="togTr(${i})">${esc(TRL[i].sp)} → ${esc(TRL[i].sc)} <b>${cnt[i].toLocaleString()}</b></button>`).join('')+'</div>';
+      trzEl.style.display='';
+    }else{trzEl.style.display='none';trzEl.innerHTML='';}
   }
 
   // PIE status
