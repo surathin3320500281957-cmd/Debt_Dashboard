@@ -187,3 +187,6 @@ Detail table: เดือนนี้ 18 columns (incl. 5 "(ก่อน)" colu
   Excel; the new rule reproduces it to within ~3 baht.
 - Always validate against the source before reporting totals; an earlier
   round showed a wrong หนี้ตัวชี้วัด because the wrong header cell was used.
+
+- **Status zone in เดือนนี้/เดือนก่อน** (`#d-stz`): multi-select chips per `vST` status (`STS`, `STL`, `togSt/allSt/clrSt`, counts from `DFst`); the `f-st` dropdown and the status doughnut (`#pie-card`, grid class `.g4.nopie`) are hidden there and remain only in เปรียบเทียบ (which has its own transition zone `#d-trz`). `STS` is cleared on every `setView()`.
+- **Update:** the status doughnut chart and the `f-st` dropdown were removed from **all** tabs (the dropdown element still exists but is hidden; `DS.st` drill is gone). Status selection is only via the chip zones: `#d-stz` (เดือนนี้/เดือนก่อน) and `#d-trz` (เปรียบเทียบ). The chart row `.g4` is now 3 cards.
