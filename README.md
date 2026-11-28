@@ -146,7 +146,7 @@ rank number | capsule bar (hue by rank, width ∝ value) with a purple name
 badge | dark value badge on the right. Fonts 16–17 px (executives with poor
 eyesight — don't shrink). Cards are `auto-fit minmax(520px)` so names don't
 truncate; long names wrap. Trade-off: bars are not click-to-drill any more.
-Other charts still use Chart.js (`mkC`). `index-baa.html` (separate
+The value badge also shows a count line `N ราย` (`mkRank(id,labels,vals,counts)`): rk1 = contracts in the project that exist in the viewed month (cmp = this month), rk2/rkp = contracts with indicator debt > 0. Other charts still use Chart.js (`mkC`). `index-baa.html` (separate
 dashboard) was deliberately left unchanged.
 
 ---

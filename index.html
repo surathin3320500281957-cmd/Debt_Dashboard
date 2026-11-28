@@ -38,7 +38,8 @@ body{font-family:var(--font);font-size:15px;background:#eef2f7;color:var(--g800)
 .rk-tr{position:relative;min-width:0;display:flex;align-items:center;min-height:44px}
 .rk-bar{position:absolute;left:0;top:0;bottom:0;border-radius:999px}
 .rk-nm{position:relative;margin:0 5px;background:#7c3aed;color:#fff;font-size:16px;font-weight:700;border-radius:18px;padding:5px 14px;line-height:1.25;max-width:calc(100% - 10px);overflow-wrap:anywhere}
-.rk-v{background:rgba(31,27,45,.92);color:#fff;font-size:17px;font-weight:700;border-radius:10px;padding:7px 14px;min-width:96px;text-align:center}
+.rk-c{display:block;font-size:13px;font-weight:500;opacity:.85;line-height:1.2;margin-top:2px}
+.rk-v{line-height:1.2;background:rgba(31,27,45,.92);color:#fff;font-size:17px;font-weight:700;border-radius:10px;padding:7px 14px;min-width:96px;text-align:center}
 .rk-no{color:var(--g400);padding:20px;text-align:center}
 @media(max-width:700px){.rk-row{gap:8px;grid-template-columns:24px 1fr auto}.rk-nm{font-size:14px;padding:4px 10px}.rk-v{font-size:15px;min-width:76px;padding:6px 8px}}
 .nav{background:#fff;border-bottom:2px solid var(--g200);padding:0 24px;display:flex;gap:2px;box-shadow:0 2px 6px rgba(0,0,0,.06)}
@@ -84,10 +85,11 @@ body{font-family:var(--font);font-size:15px;background:#eef2f7;color:var(--g800)
 .trz-h small{font-weight:400;color:var(--g400);font-size:13px}
 .trz-h button{border:1px solid #cbd5e1;background:#f8fafc;border-radius:999px;padding:6px 14px;font:inherit;font-size:14px;cursor:pointer}
 .trz-b{display:flex;flex-wrap:wrap;gap:8px}
-.trc{border:2px solid #bae6fd;background:#f0f9ff;color:#0c4a6e;border-radius:999px;padding:7px 14px;font:inherit;font-size:15px;cursor:pointer;display:inline-flex;gap:8px;align-items:center}
-.trc b{background:#0369a1;color:#fff;border-radius:999px;padding:1px 9px;font-size:14px}
-.trc.on{background:#0369a1;color:#fff;border-color:#0369a1}.trc.on b{background:#fff;color:#0369a1}
-.trc.z{opacity:.4}
+.trc{--c:#0284c7;border:3px solid transparent;background:var(--c);color:#fff;border-radius:999px;padding:8px 14px;font:inherit;font-size:15px;font-weight:600;cursor:pointer;display:inline-flex;gap:8px;align-items:center;box-shadow:0 2px 6px rgba(0,0,0,.18)}
+.trc b{background:#fff;color:var(--c);border-radius:999px;padding:1px 10px;font-size:14px}
+.trc.dim{opacity:.72}
+.trc.on{border-color:#1f1b2d;box-shadow:0 0 0 2px #fff,0 0 0 4px var(--c)}
+.trc.z{opacity:.3}
 .chg{margin-top:-4px}
 .chg .kc{cursor:pointer}.chg .kc.on{outline:3px solid #1f1b2d}
 .pl.pn{background:#dcfce7;color:#166534}.pl.px{background:#fee2e2;color:#991b1b}
@@ -291,14 +293,14 @@ async function dcmp(b64){
   let off=0;for(const c of ch){out.set(c,off);off+=c.length;}
   return new TextDecoder().decode(out);
 }
-function mkRank(id,labels,vals){
+function mkRank(id,labels,vals,cnts){
   const el=document.getElementById(id);if(!el)return;
   if(!vals.length){el.innerHTML='<div class="rk-no">ไม่มีข้อมูล</div>';return;}
   const mx=Math.max(...vals,1),n=vals.length;
   el.innerHTML=vals.map((v,i)=>{
     const h=Math.round(28+(280-28)*(n>1?i/(n-1):0)),w=Math.max(v/mx*100,8);
     const nm=String(labels[i]).replace(/&/g,'&amp;').replace(/</g,'&lt;');
-    return `<div class="rk-row"><div class="rk-n">${i+1}</div><div class="rk-tr"><div class="rk-bar" style="width:${w}%;background:hsl(${h},68%,58%)" title="${nm}: ${fmt(v)}"></div><span class="rk-nm" title="${nm}">${nm}</span></div><div class="rk-v">${fmt(v)}</div></div>`;
+    return `<div class="rk-row"><div class="rk-n">${i+1}</div><div class="rk-tr"><div class="rk-bar" style="width:${w}%;background:hsl(${h},68%,58%)" title="${nm}: ${fmt(v)}"></div><span class="rk-nm" title="${nm}">${nm}</span></div><div class="rk-v">${fmt(v)}${cnts?`<span class="rk-c">${(cnts[i]||0).toLocaleString()} ราย</span>`:''}</div></div>`;
   }).join('');
 }
 function mkC(id,type,data,opts){
@@ -312,6 +314,7 @@ function mkC(id,type,data,opts){
 }
 
 // ===== DEBT =====
+const TRC=['#e11d48','#ea580c','#16a34a','#0284c7','#7c3aed','#db2777','#0d9488','#2563eb','#c026d3','#4d7c0f','#dc2626','#9333ea'];
 let TRL=[],SCM='',TRS=new Set(),TRX=false;
 function initDF(){
   {const m={};DR.forEach(r=>{if(r[D.ch]==='B'&&r[D.sc]!==r[D.sp]){const k=r[D.sp]+'\u0001'+r[D.sc];m[k]=(m[k]||0)+1;}});
@@ -505,7 +508,7 @@ function renderDebt(){
       const show=TRL.map((_,i)=>i).filter((i,k)=>TRX||k<LIM||TRS.has(i));
       const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
       trzEl.innerHTML=`<div class="trz-h">ย้ายสถานะบริหารหนี้ (ก่อน → นี้) <small>เลือกได้หลายคู่ · ${TRL.length} คู่</small><button onclick="allTr()">เลือกทั้งหมด</button><button onclick="clrTr()">ล้างที่เลือก${TRS.size?' ('+TRS.size+')':''}</button>${TRL.length>LIM?`<button onclick="expTr()">${TRX?'ย่อ':'ดูทั้งหมด ('+TRL.length+')'}</button>`:''}</div><div class="trz-b">`+
-        show.map(i=>`<button class="trc${TRS.has(i)?' on':''}${cnt[i]===0&&!TRS.has(i)?' z':''}" onclick="togTr(${i})">${esc(TRL[i].sp)} → ${esc(TRL[i].sc)} <b>${cnt[i].toLocaleString()}</b></button>`).join('')+'</div>';
+        show.map(i=>`<button class="trc${TRS.has(i)?' on':TRS.size?' dim':''}${cnt[i]===0&&!TRS.has(i)?' z':''}" style="--c:${TRC[i%TRC.length]}" onclick="togTr(${i})">${TRS.has(i)?'✓ ':''}${esc(TRL[i].sp)} → ${esc(TRL[i].sc)} <b>${cnt[i].toLocaleString()}</b></button>`).join('')+'</div>';
       trzEl.style.display='';
     }else{trzEl.style.display='none';trzEl.innerHTML='';}
   }
@@ -570,16 +573,17 @@ function renderDebt(){
   } else if(dkRow){dkRow.style.display='none';}
 
     // RANKING project
-  const pm={};d.forEach(r=>{const p=r[D.pj]||'?';if(!pm[p])pm[p]={pc:0,pp:0,kc:0,kp:0};pm[p].pc+=r[D.pc];pm[p].pp+=r[D.pp];pm[p].kc+=r[D.kc];pm[p].kp+=r[D.kp];});
+  const inM=r=>ip?r[D.ch]!=='N':r[D.ch]!=='X';
+  const pm={};d.forEach(r=>{const p=r[D.pj]||'?';if(!pm[p])pm[p]={pc:0,pp:0,kc:0,kp:0,n:0,nk:0};pm[p].pc+=r[D.pc];pm[p].pp+=r[D.pp];pm[p].kc+=r[D.kc];pm[p].kp+=r[D.kp];if(inM(r)){pm[p].n++;if((ip?r[D.kp]:r[D.kc])>0)pm[p].nk++;}});
   const t15p=Object.entries(pm).sort((a,b)=>(ip?b[1].pp:b[1].pc)-(ip?a[1].pp:a[1].pc)).slice(0,15);
   const t15k=Object.entries(pm).filter(e=>(ip?e[1].kp:e[1].kc)>0).sort((a,b)=>(ip?b[1].kp:b[1].kc)-(ip?a[1].kp:a[1].kc)).slice(0,15);
-  mkRank('ch-rk1',t15p.map(e=>e[0]),t15p.map(e=>ip?e[1].pp:e[1].pc));
-  mkRank('ch-rk2',t15k.map(e=>e[0]),t15k.map(e=>ip?e[1].kp:e[1].kc));
+  mkRank('ch-rk1',t15p.map(e=>e[0]),t15p.map(e=>ip?e[1].pp:e[1].pc),t15p.map(e=>e[1].n));
+  mkRank('ch-rk2',t15k.map(e=>e[0]),t15k.map(e=>ip?e[1].kp:e[1].kc),t15k.map(e=>e[1].nk));
 
   // RANKING plan
-  const plm={};d.forEach(r=>{const pl=r[D.pl];if(!pl||pl==='')return;if(!plm[pl])plm[pl]={kc:0,kp:0,pj:r[D.pj]};plm[pl].kc+=r[D.kc];plm[pl].kp+=r[D.kp];});
+  const plm={};d.forEach(r=>{const pl=r[D.pl];if(!pl||pl==='')return;if(!plm[pl])plm[pl]={kc:0,kp:0,pj:r[D.pj],nk:0};plm[pl].kc+=r[D.kc];plm[pl].kp+=r[D.kp];if(inM(r)&&(ip?r[D.kp]:r[D.kc])>0)plm[pl].nk++;});
   const t15pl=Object.entries(plm).filter(e=>(ip?e[1].kp:e[1].kc)>0).sort((a,b)=>(ip?b[1].kp:b[1].kc)-(ip?a[1].kp:a[1].kc)).slice(0,15);
-  mkRank('ch-rkp',t15pl.map(e=>e[0]+' ('+e[1].pj+')'),t15pl.map(e=>ip?e[1].kp:e[1].kc));
+  mkRank('ch-rkp',t15pl.map(e=>e[0]+' ('+e[1].pj+')'),t15pl.map(e=>ip?e[1].kp:e[1].kc),t15pl.map(e=>e[1].nk));
 
   renderDSum(d,ip,ic);renderDDet(d,ip,ic);
 }
