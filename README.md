@@ -23,7 +23,11 @@ View modes (`DV`): **เดือนนี้** (`curr`), **เดือนก�
 *union* of both months, field 20 `ch` = `B` both / `N` new this month /
 `X` closed = prev only; `applyF()` hides `X` in curr and `N` in prev).
 Only in cmp: filter `f-ch` (การเปลี่ยนแปลงสัญญา), 3 clickable summary cards
-(`#d-chg`, `setCh()`), and a table/export column. New = ทำสัญญาใหม่,
+(`#d-chg`, `setCh()`), and a table/export column.
+Also only in cmp: filter `f-sc` (เปลี่ยนแปลงสถานะบริหารหนี้: เปลี่ยนสถานะ / ไม่เปลี่ยนสถานะ,
+compares `sc` vs `sp`, applies to `B` rows only — new/closed contracts are excluded from both
+options), 2 clickable cards (`#d-chs`, `setSc()`), and the column สถานะบริหารหนี้(ก่อน)
+before สถานะบริหารหนี้ (table + export). `applyF()` uses `pass(r,skip)` so each card set ignores its own filter. New = ทำสัญญาใหม่,
 X = ปิดสัญญา (confirmed by the user).
 
 **Removed on request (do not re-add unless asked):**
@@ -162,7 +166,7 @@ dashboard) was deliberately left unchanged.
   clears one; `resetF()` clears all.
 
 Detail table: เดือนนี้ 18 columns (incl. 5 "(ก่อน)" columns after สถานะ),
-เดือนก่อน 13, เปรียบเทียบ 17 (last = การเปลี่ยนแปลงสัญญา); the Excel export has the same columns.
+เดือนก่อน 13, เปรียบเทียบ 18 (incl. สถานะ(ก่อน); last = การเปลี่ยนแปลงสัญญา); the Excel export has the same columns.
 "รายละเอียด" column exists but is empty (the new file has no such column).
 
 ---
