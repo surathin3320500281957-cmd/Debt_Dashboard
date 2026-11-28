@@ -19,6 +19,11 @@ def ind(r): return 0.0 if S(r['CUST_CODE']) in sued else round(sum(num(r[m]) for
 assert set(c.CONTRACT_TYPE_CODE)<=set(TP) and set(p.CONTRACT_TYPE_CODE)<=set(TP)
 pd_={S(r['CUST_CODE']):r for _,r in p.iterrows()}
 cd_={S(r['CUST_CODE']):r for _,r in c.iterrows()}
+def due(x):
+    """DUE_PRICE of that month's row (rounded), '' when the row is missing or the value is blank"""
+    if x is None: return ''
+    v=num(x['DUE_PRICE']) if S(x['DUE_PRICE'])!='' else None
+    return '' if v is None else round(v)
 def row(r,q,ch):
     """r = this-month row or None, q = previous-month row or None; ch: B both, N new (this month only), X closed (prev only)"""
     base=r if r is not None else q
@@ -29,7 +34,7 @@ def row(r,q,ch):
       S(r['DM_STATUS_NAME']) if r is not None else '',S(q['DM_STATUS_NAME']) if q is not None else '',
       rng(per) if r is not None else '',rng(pp_) if q is not None else '',per,pp_,
       round(num(r['ALL_PRICE'])) if r is not None else 0,round(num(q['ALL_PRICE'])) if q is not None else 0,
-      round(ind(r)) if r is not None else 0,round(ind(q)) if q is not None else 0,'ยังไม่ติดตาม','ยังไม่ติดตาม','','',ch,S(base['CUST_CODE'])]
+      round(ind(r)) if r is not None else 0,round(ind(q)) if q is not None else 0,'ยังไม่ติดตาม','ยังไม่ติดตาม','','',ch,S(base['CUST_CODE']),due(r),due(q)]
 DR=[row(r,pd_.get(S(r['CUST_CODE'])),'B' if S(r['CUST_CODE']) in pd_ else 'N') for _,r in c.iterrows()]
 DR+=[row(None,q,'X') for k,q in pd_.items() if k not in cd_]
 json.dump(DR,open('DR_new.json','w'),ensure_ascii=False)

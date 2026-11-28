@@ -193,3 +193,9 @@ Detail table: เดือนนี้ 18 columns (incl. 5 "(ก่อน)" colu
 
 - **Cause-of-change zone (เปรียบเทียบ)** `#d-cz` replaces the old `f-trend` (debt-amount trend) and `f-ch` filters and the 3 contract-change cards. 5 groups from `czOf(r,CZM)`: `N` สัญญาใหม่ (ch=N), `U` หนี้เพิ่ม (existing, Δ>0), `E` เท่าเดิม, `D` หนี้ลด (existing, Δ<0), `X` ปิดสัญญา (ch=X). Multi-select `CZ`; metric toggle `CZM` = `pc` (หนี้ค้างรวม) or `kc` (หนี้ตัวชี้วัด); counts follow other filters via `DFcz`. Table/export column "สาเหตุการเปลี่ยนแปลง" uses the same function. `f-trendi` (installment trend) is kept.
 - **Rankings in cmp** (`mkNetRanks()`): ch-rk1 = top-15 projects by net increase, ch-rk2 = top-15 by net decrease (net = Σ(curr−prev) over the union rows, for the chosen metric), value badge = signed net + count of rows increasing (N+U) / decreasing (D+X), coloured sub-chips show the breakdown by cause. The plot ranking card (`#rkp-card`) is hidden in cmp. **Click-to-filter**: clicking a project bar in `ch-rk1`/`ch-rk2` (all tabs) sets `DS.pj` (`rkPick`); rankings are computed from `DFp` (= rows ignoring `DS.pj`) so the list stays visible and the selected row is outlined; chip ✕ clears.
+
+## อัปเดตล่าสุด (due_price / ตารางสรุประดับโครงการ / แก้โหลดครั้งแรก)
+- ข้อมูลแถวมี 24 ฟิลด์: เพิ่ม `due:22` (DUE_PRICE เดือนนี้) และ `dup:23` (DUE_PRICE เดือนก่อน) ว่าง = '' แสดง "—" (สร้างโดย build_data.py)
+- ตารางรายละเอียดทุก tab: คอลัมน์ `due_price` ต่อจาก รหัสลูกหนี้ (curr ใช้ due, prev ใช้ dup, cmp ใช้ due และ dup สำหรับแถวที่หลุด) และอยู่ใน Excel export ทั้ง 3 แบบ
+- ตารางสรุปทุก tab: กอง > สาขา > โครงการ (แถว `tr.spj`) เรียงตามหนี้ค้างรวม
+- แก้บั๊กเปิดครั้งแรก: `init()` เรียก `setView('curr')` (ซึ่งเรียก applyF) แทน `renderDebt()` ตรง ๆ จึงมี DFst/DFp/DFcz ครบตั้งแต่โหลดแรก
